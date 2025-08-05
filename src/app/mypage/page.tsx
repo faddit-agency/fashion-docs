@@ -512,20 +512,12 @@ export default function MyPage() {
                         <div className="flex items-start space-x-3">
                           {/* 상품 이미지 */}
                           <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
-                            {purchase.products?.image_urls && purchase.products.image_urls.length > 0 ? (
-                              <img 
-                                src={purchase.products.image_urls[0]} 
-                                alt={purchase.products.name}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="text-gray-500 text-xs">이미지</div>
-                            )}
+                            <div className="text-gray-500 text-xs">이미지</div>
                           </div>
                           
                           <div className="flex-1">
                             <div className="flex justify-between items-start mb-2">
-                              <h3 className="font-medium text-gray-900">{purchase.products?.name}</h3>
+                              <h3 className="font-medium text-gray-900">상품 #{purchase.product_id}</h3>
                               <span className={`text-sm font-medium px-2 py-1 rounded ${
                                 purchase.status === 'completed' 
                                   ? 'bg-green-100 text-green-800' 
@@ -541,13 +533,13 @@ export default function MyPage() {
                               <span>{formatDate(new Date(purchase.created_at))}</span>
                               <span className="font-medium">{formatPrice(purchase.amount)}</span>
                             </div>
-                            {purchase.status === 'completed' && purchase.products?.file_url && (
+                            {purchase.status === 'completed' && (
                               <Button 
                                 variant="outline" 
                                 size="sm"
                                 onClick={() => handleDownloadFile(
-                                  purchase.products!.file_url, 
-                                  `${purchase.products!.name}.pdf`
+                                  `/files/product${purchase.product_id}.pdf`, 
+                                  `상품${purchase.product_id}.pdf`
                                 )}
                               >
                                 <Download className="w-4 h-4 mr-1" />
