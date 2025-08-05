@@ -61,53 +61,8 @@ export default function MyPage() {
     } catch (err) {
       console.error("데이터 로딩 오류:", err);
       setError("데이터를 불러오는데 실패했습니다.");
-      // 임시 데이터로 폴백
-      setPurchases([
-        {
-          id: 1,
-          user_id: "user1",
-          product_id: 1,
-          amount: 50000,
-          status: "completed",
-          created_at: "2024-01-15T00:00:00Z",
-          products: {
-            id: 1,
-            name: "남성 기본 반팔 티셔츠 도식화",
-            price: 50000,
-            image_urls: ["/images/product1.jpg"],
-            category: "상의",
-            gender: "남성",
-            season: "봄/여름",
-            description: "기본적인 남성 반팔 티셔츠의 도식화입니다.",
-            seller_id: "seller1",
-            file_url: "/files/product1.pdf",
-            created_at: "2024-01-15T00:00:00Z",
-            updated_at: "2024-01-15T00:00:00Z"
-          }
-        },
-        {
-          id: 2,
-          user_id: "user1",
-          product_id: 2,
-          amount: 70000,
-          status: "completed",
-          created_at: "2024-01-10T00:00:00Z",
-          products: {
-            id: 2,
-            name: "여성 기본 원피스 도식화",
-            price: 70000,
-            image_urls: ["/images/product2.jpg"],
-            category: "원피스",
-            gender: "여성",
-            season: "봄/여름",
-            description: "우아한 여성 원피스 도식화입니다.",
-            seller_id: "seller1",
-            file_url: "/files/product2.pdf",
-            created_at: "2024-01-10T00:00:00Z",
-            updated_at: "2024-01-10T00:00:00Z"
-          }
-        }
-      ]);
+      // 빈 배열로 설정
+      setPurchases([]);
       setWorksheets([
         {
           id: 1,
