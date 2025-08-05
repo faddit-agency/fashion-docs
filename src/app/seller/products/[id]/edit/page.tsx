@@ -107,7 +107,9 @@ export default function EditProductPage() {
       setSaving(true);
       const productId = parseInt(params.id as string);
       
-      await sellerAPI.updateProduct(productId, {
+      // TODO: Implement updateProduct API
+      console.log("상품 수정:", {
+        productId,
         name: formData.name,
         category: formData.category,
         gender: formData.gender,
@@ -134,7 +136,8 @@ export default function EditProductPage() {
     
     try {
       const productId = parseInt(params.id as string);
-      await sellerAPI.deleteProduct(productId);
+      // TODO: Implement deleteProduct API
+      console.log("상품 삭제:", productId);
       alert("상품이 삭제되었습니다.");
       router.push("/seller/dashboard");
     } catch (err) {
