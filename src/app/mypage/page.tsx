@@ -387,18 +387,10 @@ export default function MyPage() {
                         <div key={purchase.id} className="border border-gray-200 rounded-lg p-4">
                           <div className="flex items-start space-x-3">
                             <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
-                              {purchase.products?.image_urls && purchase.products.image_urls.length > 0 ? (
-                                <img 
-                                  src={purchase.products.image_urls[0]} 
-                                  alt={purchase.products.name}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="text-gray-500 text-xs">이미지</div>
-                              )}
+                              <div className="text-gray-500 text-xs">이미지</div>
                             </div>
                             <div className="flex-1">
-                              <h3 className="font-medium text-gray-900 text-sm">{purchase.products?.name}</h3>
+                              <h3 className="font-medium text-gray-900 text-sm">상품 #{purchase.product_id}</h3>
                               <div className="flex justify-between items-center text-xs text-gray-600 mt-1">
                                 <span>{formatDate(new Date(purchase.created_at))}</span>
                                 <span className="font-medium">{formatPrice(purchase.amount)}</span>
