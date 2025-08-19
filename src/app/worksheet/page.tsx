@@ -1547,6 +1547,7 @@ export default function WorksheetPage() {
         {/* 드라이브 선택기 */}
         {showDriveSelector && (
           <DriveSelector
+            isOpen={showDriveSelector}
             onSelect={handleDriveSelect}
             onClose={() => setShowDriveSelector(false)}
           />
