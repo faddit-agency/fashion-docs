@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
@@ -105,6 +105,7 @@ export default function WorksheetDetailPage() {
   const [chatMessage, setChatMessage] = useState("");
   const [chatHistory] = useState<{ role: 'user' | 'assistant', content: string }[]>([]);
   const [isChatLoading] = useState(false);
+  const worksheetRef = useRef<HTMLDivElement>(null);
 
   const worksheetId = params.id as string;
 
@@ -413,7 +414,7 @@ export default function WorksheetDetailPage() {
                 )}
               </Button>
               <PDFDownload
-                elementRef={null}
+                elementRef={worksheetRef}
                 filename={`worksheet_${worksheetData.title.replace(/\s+/g, '_')}.pdf`}
                 type="element"
                 variant="primary"
@@ -438,7 +439,7 @@ export default function WorksheetDetailPage() {
         )}
 
         {/* 메인 콘텐츠 영역 */}
-        <div className="flex-1 flex overflow-hidden">
+        <div ref={worksheetRef} className="flex-1 flex overflow-hidden">
           {/* 기본정보 섹션 */}
           {showDetails && (
             <div className="w-80 border-r border-border bg-muted overflow-y-auto flex-shrink-0">
