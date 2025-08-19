@@ -40,7 +40,7 @@ export async function GET(
     const merged = { ...data.content, ...data };
 
     return NextResponse.json({ worksheet: merged });
-  } catch (_e) {
+  } catch {
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }

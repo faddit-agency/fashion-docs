@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
       .eq('user_id', userId);
 
     return NextResponse.json({ success: true, purchases: created, clearedCart: true });
-  } catch (_e) {
+  } catch {
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }

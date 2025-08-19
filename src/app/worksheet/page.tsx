@@ -9,7 +9,7 @@ import { PDFDownload } from "@/components/ui/pdf-download";
 import { Toggle } from "@/components/ui/toggle";
 import { DriveSelector } from "@/components/ui/drive-selector";
 import { TechnicalDrawingEditor } from "@/components/ui/technical-drawing-editor";
-import { FileText, X } from "lucide-react";
+import { FileText, X, FolderOpen } from "lucide-react";
 
 interface WorksheetData {
   id?: string;
@@ -108,77 +108,77 @@ export default function WorksheetPage() {
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
   const worksheetRef = useRef<HTMLDivElement>(null);
 
-  const _sampleWorksheetData: WorksheetData = {
-    title: "베이직 셔츠",
-    brand: "FADDIT",
-    item: "셔츠",
-    gender: "남성",
-    category: "상의",
-    apparel: "셔츠",
-    season: "2025 S/S",
-    additionalInfo: {
-      requestDate: "2024-12-15",
-      deliveryDate: "2025-01-15",
-      productName: "베이직 셔츠",
-      sampleNumber: "SAMPLE-001",
-      productNumber: "PROD-001",
-      manufacturer: "패션팩토리",
-      contact1: "김철수",
-      contact2: "이영희",
-      contact3: "박민수",
-      contactInfo: "010-1234-5678"
-    },
-    technicalDrawing: {
-      frontImage: "/api/placeholder/400/300",
-      backImage: "/api/placeholder/400/300",
-      annotations: ["앞면: 포켓 위치", "뒷면: 플리츠 디테일"]
-    },
-    workNotes: "면 소재 사용, 깔끔한 실루엣으로 제작",
-    sizeSpec: {
-      sizes: ["S", "M", "L", "XL"],
-      measurements: {
-        S: { totalLength: 70, shoulderWidth: 45, armhole: 20, chestCircumference: 100 },
-        M: { totalLength: 72, shoulderWidth: 47, armhole: 21, chestCircumference: 104 },
-        L: { totalLength: 74, shoulderWidth: 49, armhole: 22, chestCircumference: 108 },
-        XL: { totalLength: 76, shoulderWidth: 51, armhole: 23, chestCircumference: 112 }
-      }
-    },
-    quantityByColorSize: {
-      colors: ["화이트", "블랙", "네이비"],
-      sizes: ["S", "M", "L", "XL"],
-      quantities: {
-        "화이트": { S: 50, M: 100, L: 80, XL: 30 },
-        "블랙": { S: 40, M: 90, L: 70, XL: 25 },
-        "네이비": { S: 30, M: 80, L: 60, XL: 20 }
-      }
-    },
-    labelPosition: {
-      images: ["/api/placeholder/200/150"]
-    },
-    fabric: {
-      mainFabric: "면 100%",
-      outerFabric: "면 100%",
-      swatches: ["/api/placeholder/100/100"]
-    },
-    pattern: {
-      fileName: "pattern.ai",
-      fileUrl: "/api/placeholder/200/200"
-    },
-    subMaterials: [
-      { name: "단추", color: "화이트", specification: "플라스틱", quantity: 6 },
-      { name: "실", color: "화이트", specification: "폴리에스터", quantity: 200 }
-    ],
-    fabricInfo: [
-      {
-        location: "상의",
-        companyItem: "면 원단",
-        color: "화이트",
-        sizeUnitPrice: "₩5,000/야드",
-        composition: "면 100%",
-        yield: "3야드"
-      }
-    ]
-  };
+  // const _sampleWorksheetData: WorksheetData = {
+  //   title: "베이직 셔츠",
+  //   brand: "FADDIT",
+  //   item: "셔츠",
+  //   gender: "남성",
+  //   category: "상의",
+  //   apparel: "셔츠",
+  //   season: "2025 S/S",
+      //   additionalInfo: {
+  //     requestDate: "2024-12-15",
+  //     deliveryDate: "2025-01-15",
+  //     productName: "베이직 셔츠",
+  //     sampleNumber: "SAMPLE-001",
+  //     productNumber: "PROD-001",
+  //     manufacturer: "패션팩토리",
+  //     contact1: "김철수",
+  //     contact2: "이영희",
+  //     contact3: "박민수",
+  //     contactInfo: "010-1234-5678"
+  //   },
+      //   technicalDrawing: {
+  //     frontImage: "/api/placeholder/400/300",
+  //     backImage: "/api/placeholder/400/300",
+  //     annotations: ["앞면: 포켓 위치", "뒷면: 플리츠 디테일"]
+  //   },
+      //   workNotes: "면 소재 사용, 깔끔한 실루엣으로 제작",
+  //   sizeSpec: {
+  //     sizes: ["S", "M", "L", "XL"],
+  //     measurements: {
+  //       S: { totalLength: 70, shoulderWidth: 45, armhole: 20, chestCircumference: 100 },
+  //       M: { totalLength: 72, shoulderWidth: 47, armhole: 21, chestCircumference: 104 },
+  //       L: { totalLength: 74, shoulderWidth: 49, armhole: 22, chestCircumference: 108 },
+  //       XL: { totalLength: 76, shoulderWidth: 51, armhole: 23, chestCircumference: 112 }
+  //     }
+  //   },
+      //   quantityByColorSize: {
+  //     colors: ["화이트", "블랙", "네이비"],
+  //     sizes: ["S", "M", "L", "XL"],
+  //     quantities: {
+  //       "화이트": { S: 50, M: 100, L: 80, XL: 30 },
+  //       "블랙": { S: 40, M: 90, L: 70, XL: 25 },
+  //       "네이비": { S: 30, M: 80, L: 60, XL: 20 }
+  //     }
+  //   },
+      //   labelPosition: {
+  //     images: ["/api/placeholder/200/150"]
+  //   },
+  //   fabric: {
+  //     mainFabric: "면 100%",
+  //     outerFabric: "면 100%",
+  //     swatches: ["/api/placeholder/100/100"]
+  //   },
+  //   pattern: {
+  //     fileName: "pattern.ai",
+  //     fileUrl: "/api/placeholder/200/200"
+  //   },
+  //   subMaterials: [
+  //     { name: "단추", color: "화이트", specification: "플라스틱", quantity: 6 },
+  //     { name: "실", color: "화이트", specification: "폴리에스터", quantity: 200 }
+  //   ],
+  //   fabricInfo: [
+  //     {
+  //       location: "상의",
+  //       companyItem: "면 원단",
+  //       color: "화이트",
+  //       sizeUnitPrice: "₩5,000/야드",
+  //       composition: "면 100%",
+  //       yield: "3야드"
+  //     }
+  //   ]
+  // };
 
   const handleFileUploadComplete = (url: string, path: string) => {
     setUploadedFile({ url, path });
