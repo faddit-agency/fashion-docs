@@ -9,7 +9,7 @@ import { PDFDownload } from "@/components/ui/pdf-download";
 import { Toggle } from "@/components/ui/toggle";
 import { DriveSelector } from "@/components/ui/drive-selector";
 import { TechnicalDrawingEditor } from "@/components/ui/technical-drawing-editor";
-import { Download, FileText, Edit, MessageSquare, Eye, EyeOff, FolderOpen, X } from "lucide-react";
+import { FileText, X } from "lucide-react";
 
 interface WorksheetData {
   id?: string;
@@ -108,7 +108,7 @@ export default function WorksheetPage() {
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
   const worksheetRef = useRef<HTMLDivElement>(null);
 
-  const sampleWorksheetData: WorksheetData = {
+  const _sampleWorksheetData: WorksheetData = {
     title: "베이직 셔츠",
     brand: "FADDIT",
     item: "셔츠",

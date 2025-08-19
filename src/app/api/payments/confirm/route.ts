@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { supabaseAdmin } from '@/lib/supabase-admin';
 
 // 결제 성공 후 결제키를 검증하고 구매 레코드 생성/업데이트
 export async function POST(request: NextRequest) {
@@ -54,7 +53,7 @@ export async function POST(request: NextRequest) {
       .eq('user_id', userId);
 
     return NextResponse.json({ success: true, purchases: created, clearedCart: true });
-  } catch (e) {
+  } catch (_e) {
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }

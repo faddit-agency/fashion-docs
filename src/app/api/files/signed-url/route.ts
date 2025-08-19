@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { supabaseAdmin } from '@/lib/supabase-admin';
 
 // 구매자에게만 제공되는 서명 URL 발급 API
 // body: { path: string, bucket?: string, userId: string }

@@ -239,7 +239,7 @@ ${worksheetJson}
       throw openaiError;
     }
 
-  } catch (error) {
+      } catch (_error) {
     console.error('GPT API 오류 상세:', error);
     console.error('에러 타입:', typeof error);
     console.error('에러 메시지:', error instanceof Error ? error.message : 'Unknown error');

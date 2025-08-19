@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     try {
       const db = supabaseAdmin || supabase!;
       // 기존 작업지시서가 있는지 확인
-      const { data: existingWorksheet, error: checkError } = await db
+      const { data: existingWorksheet } = await db
         .from('worksheets')
         .select('id')
         .eq('user_id', userId)

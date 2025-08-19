@@ -1,15 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
+import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
 import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import { TechnicalDrawingEditor } from "@/components/ui/technical-drawing-editor";
-import { DriveSelector } from "@/components/ui/drive-selector";
 import { PDFDownload } from "@/components/ui/pdf-download";
 import { Toggle } from "@/components/ui/toggle";
-import { Download, FileText, Edit, MessageSquare, Eye, EyeOff, FolderOpen, X, Save } from "lucide-react";
+import { Save } from "lucide-react";
 
 interface WorksheetData {
   id?: string;
@@ -90,7 +90,6 @@ interface WorksheetData {
 
 export default function WorksheetDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const { user } = useUser();
   const [worksheetData, setWorksheetData] = useState<WorksheetData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -98,15 +97,14 @@ export default function WorksheetDetailPage() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [showDetails, setShowDetails] = useState(true);
   const [showChat, setShowChat] = useState(false);
-  const [showDriveSelector, setShowDriveSelector] = useState(false);
   const [showDrawingEditor, setShowDrawingEditor] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
   const [sizeSpecType, setSizeSpecType] = useState<'cm/단면' | 'cm/총장' | 'inch/단면' | 'inch/총장'>('cm/단면');
   const [chatMessage, setChatMessage] = useState("");
-  const [chatHistory, setChatHistory] = useState<{ role: 'user' | 'assistant', content: string }[]>([]);
-  const [isChatLoading, setIsChatLoading] = useState(false);
+  const [chatHistory] = useState<{ role: 'user' | 'assistant', content: string }[]>([]);
+  const [isChatLoading] = useState(false);
 
   const worksheetId = params.id as string;
 
@@ -336,7 +334,7 @@ export default function WorksheetDetailPage() {
             <h1 className="text-2xl font-bold text-foreground mb-4">작업지시서를 찾을 수 없습니다</h1>
             <p className="text-gray-600 mb-4">{error}</p>
             <Button asChild className="bg-primary hover:bg-primary/90">
-              <a href="/worksheet">새 작업지시서 만들기</a>
+              <Link href="/worksheet">새 작업지시서 만들기</Link>
             </Button>
           </div>
         </div>
