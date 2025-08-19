@@ -196,7 +196,7 @@ ${worksheetJson}
             message: '워크시트가 성공적으로 업데이트되었습니다.'
           });
         }
-      } catch (_e) {
+      } catch {
         console.log('JSON 파싱 실패, 일반 텍스트로 처리');
         // JSON이 아니면 일반 텍스트 응답으로 처리
       }
