@@ -153,7 +153,8 @@ export function TechnicalDrawingEditor({
       setSelectedElement(clickedElement?.id || null);
     } else if (tool === 'pen' || tool === 'arrow') {
       setIsDrawing(true);
-      const newElement = createElement(tool, coords.x, coords.y);
+      const elementType: DrawingElement['type'] = tool === 'pen' ? 'line' : 'arrow';
+      const newElement = createElement(elementType, coords.x, coords.y);
       newElement.endX = coords.x;
       newElement.endY = coords.y;
       setCurrentElements(prev => [...prev, newElement]);
@@ -382,14 +383,14 @@ export function TechnicalDrawingEditor({
             <h2 className="text-xl font-semibold">도식화 편집</h2>
             <div className="flex space-x-2">
               <Button
-                variant={activeTab === 'front' ? 'default' : 'outline'}
+                variant={activeTab === 'front' ? 'primary' : 'outline'}
                 size="sm"
                 onClick={() => setActiveTab('front')}
               >
                 앞면
               </Button>
               <Button
-                variant={activeTab === 'back' ? 'default' : 'outline'}
+                variant={activeTab === 'back' ? 'primary' : 'outline'}
                 size="sm"
                 onClick={() => setActiveTab('back')}
               >
@@ -417,49 +418,49 @@ export function TechnicalDrawingEditor({
               <h3 className="font-medium mb-2">도구</h3>
               <div className="grid grid-cols-2 gap-2">
                 <Button
-                  variant={tool === 'select' ? 'default' : 'outline'}
+                  variant={tool === 'select' ? 'primary' : 'outline'}
                   size="sm"
                   onClick={() => setTool('select')}
                 >
                   <Move className="w-4 h-4" />
                 </Button>
                 <Button
-                  variant={tool === 'pen' ? 'default' : 'outline'}
+                  variant={tool === 'pen' ? 'primary' : 'outline'}
                   size="sm"
                   onClick={() => setTool('pen')}
                 >
                   <Pen className="w-4 h-4" />
                 </Button>
                 <Button
-                  variant={tool === 'text' ? 'default' : 'outline'}
+                  variant={tool === 'text' ? 'primary' : 'outline'}
                   size="sm"
                   onClick={() => setTool('text')}
                 >
                   <Type className="w-4 h-4" />
                 </Button>
                 <Button
-                  variant={tool === 'image' ? 'default' : 'outline'}
+                  variant={tool === 'image' ? 'primary' : 'outline'}
                   size="sm"
                   onClick={() => setTool('image')}
                 >
                   <ImageIcon className="w-4 h-4" />
                 </Button>
                 <Button
-                  variant={tool === 'rectangle' ? 'default' : 'outline'}
+                  variant={tool === 'rectangle' ? 'primary' : 'outline'}
                   size="sm"
                   onClick={() => setTool('rectangle')}
                 >
                   <Square className="w-4 h-4" />
                 </Button>
                 <Button
-                  variant={tool === 'circle' ? 'default' : 'outline'}
+                  variant={tool === 'circle' ? 'primary' : 'outline'}
                   size="sm"
                   onClick={() => setTool('circle')}
                 >
                   <Circle className="w-4 h-4" />
                 </Button>
                 <Button
-                  variant={tool === 'arrow' ? 'default' : 'outline'}
+                  variant={tool === 'arrow' ? 'primary' : 'outline'}
                   size="sm"
                   onClick={() => setTool('arrow')}
                 >
