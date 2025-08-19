@@ -310,7 +310,7 @@ export default function WorksheetPage() {
     }
   };
 
-  const handleDirectEdit = (field: string, value: string) => {
+  const handleDirectEdit = (field: string, value: string | number) => {
     if (!worksheetData) return;
 
     const fieldParts = field.split('.');
