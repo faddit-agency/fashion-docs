@@ -7,7 +7,7 @@ import { Download, FileText, Image } from "lucide-react";
 
 interface PDFDownloadProps {
   // HTML 요소를 PDF로 변환할 때 사용
-  elementRef?: React.RefObject<HTMLElement>;
+  elementRef?: React.RefObject<HTMLElement | null>;
   // 텍스트를 PDF로 변환할 때 사용
   content?: string;
   filename?: string;
