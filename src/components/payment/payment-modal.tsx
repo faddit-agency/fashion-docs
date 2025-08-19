@@ -44,13 +44,19 @@ export function PaymentModal({ isOpen, onClose, product, products, onSuccess }: 
         ? items[0].name 
         : `${items[0].name} 외 ${items.length - 1}개`;
 
+      const query = new URLSearchParams({
+        amount: String(totalAmount),
+        orderName,
+        items: encodeURIComponent(JSON.stringify(items.map(i => ({ id: i.id, quantity: i.quantity || 1, price: i.price }))))
+      }).toString();
+
       await tossPayments.requestPayment("카드", {
         amount: totalAmount,
         orderId: `order_${Date.now()}`,
-        orderName: orderName,
+        orderName,
         customerName: "구매자",
         customerEmail: "customer@example.com",
-        successUrl: `${window.location.origin}/payment/success`,
+        successUrl: `${window.location.origin}/payment/success?${query}`,
         failUrl: `${window.location.origin}/payment/fail`,
       });
     } catch (error) {

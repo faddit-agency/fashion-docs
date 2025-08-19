@@ -56,7 +56,18 @@ function MyPageContent() {
       ]);
       
       setPurchases(purchasesData || []);
-      setWorksheets(worksheetsData || []);
+      // content에만 값이 있고 보조 컬럼이 비어 있을 수 있으므로 정규화
+      const normalized = (worksheetsData || []).map((w) => ({
+        ...w,
+        title: w.title || (w as any).content?.title || '작업지시서',
+        category: w.category || (w as any).content?.category || '기타',
+        size_range:
+          w.size_range ||
+          ((w as any).content?.sizeSpec?.sizes
+            ? `${(w as any).content.sizeSpec.sizes[0]}~${(w as any).content.sizeSpec.sizes[(w as any).content.sizeSpec.sizes.length - 1]}`
+            : 'S~XL'),
+      }));
+      setWorksheets(normalized);
       setCartItems(cartData || []);
     } catch (err) {
       console.error("데이터 로딩 오류:", err);
@@ -431,8 +442,10 @@ function MyPageContent() {
                             <h3 className="font-medium text-gray-900 text-sm">{worksheet.title}</h3>
                             <span className="text-xs text-primary font-medium">{worksheet.category}</span>
                           </div>
-                          <div className="flex items-center space-x-2 text-xs text-gray-600">
-                            <span>{formatDate(new Date(worksheet.created_at))}</span>
+                          <div className="flex items-center flex-wrap gap-2 text-xs text-gray-600">
+                            <span>생성: {formatDate(new Date(worksheet.created_at))}</span>
+                            <span>•</span>
+                            <span>수정: {formatDate(new Date(worksheet.updated_at))}</span>
                             <span>•</span>
                             <span>사이즈: {worksheet.size_range}</span>
                           </div>
@@ -604,16 +617,18 @@ function MyPageContent() {
                           <h3 className="font-medium text-gray-900">{worksheet.title}</h3>
                           <span className="text-sm text-primary font-medium">{worksheet.category}</span>
                         </div>
-                        <div className="flex items-center space-x-2 text-sm text-gray-600 mb-3">
-                          <span>{formatDate(new Date(worksheet.created_at))}</span>
+                        <div className="flex items-center flex-wrap gap-2 text-sm text-gray-600 mb-3">
+                          <span>생성: {formatDate(new Date(worksheet.created_at))}</span>
+                          <span>•</span>
+                          <span>수정: {formatDate(new Date(worksheet.updated_at))}</span>
                           <span>•</span>
                           <span>사이즈: {worksheet.size_range}</span>
                         </div>
                         <div className="flex space-x-2">
                           <Button variant="outline" size="sm" asChild>
-                            <Link href={`/worksheet/${worksheet.id}/edit`}>
+                            <Link href={`/worksheet/${worksheet.id}`}>
                               <Edit className="w-4 h-4 mr-1" />
-                              수정
+                              편집
                             </Link>
                           </Button>
                           <Button variant="outline" size="sm">

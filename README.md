@@ -1,4 +1,26 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Fashion Docs - 패션 문서 관리 플랫폼
+
+이 프로젝트는 [Next.js](https://nextjs.org)로 구축된 패션 문서 관리 플랫폼입니다.
+
+## 환경 설정
+
+프로젝트를 실행하기 전에 다음 환경변수를 설정해야 합니다:
+
+1. `.env.local` 파일을 프로젝트 루트에 생성하세요:
+
+```bash
+# Supabase 설정
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-project-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+
+# Supabase Admin 설정 (서버 사이드에서만 사용)
+SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
+
+# 기타 설정
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+2. Supabase 프로젝트를 생성하고 위의 값들을 설정하세요.
 
 ## Getting Started
 

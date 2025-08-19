@@ -49,7 +49,8 @@ export function FileDownload({
 
     } catch (error) {
       console.error('파일 다운로드 오류:', error);
-      alert('파일 다운로드에 실패했습니다.');
+      // 사용자에게 더 친화적인 오류 메시지 표시
+      alert('파일 다운로드에 실패했습니다. 잠시 후 다시 시도해주세요.');
     } finally {
       setIsDownloading(false);
     }

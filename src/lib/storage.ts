@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { supabaseAdmin } from './supabase-admin';
 
 export class StorageService {
   // 파일 업로드
@@ -12,7 +13,7 @@ export class StorageService {
       if (!supabase) {
         console.warn('Supabase 설정이 없습니다. 임시 URL을 반환합니다.');
         return {
-          url: `https://via.placeholder.com/400x600/cccccc/666666?text=File+Upload`,
+          url: `/api/placeholder/400/600?text=File+Upload`,
           path: `temp/${Date.now()}-${file.name}`
         };
       }
@@ -30,7 +31,7 @@ export class StorageService {
       if (error) {
         console.warn('Storage 업로드 실패, 임시 URL 반환:', error);
         return {
-          url: `https://via.placeholder.com/400x600/cccccc/666666?text=File+Upload`,
+          url: `/api/placeholder/400/600?text=File+Upload`,
           path: filePath
         };
       }
@@ -48,7 +49,7 @@ export class StorageService {
       console.error('파일 업로드 오류:', error);
       // 오류가 발생해도 앱이 중단되지 않도록 임시 URL 반환
       return {
-        url: `https://via.placeholder.com/400x600/cccccc/666666?text=File+Upload`,
+        url: `/api/placeholder/400/600?text=File+Upload`,
         path: `temp/${Date.now()}-${file.name}`
       };
     }
@@ -59,25 +60,31 @@ export class StorageService {
     path: string,
     bucket: string = 'faddit-files'
   ): Promise<string> {
+    // 클라이언트에서는 직접 URL을 만들지 않고, 서버 API를 통해 서명 URL을 발급받는다.
     try {
-      // Supabase 설정이 없는 경우 임시 처리
-      if (!supabase) {
-        return `https://via.placeholder.com/400x600/cccccc/666666?text=Download+File`;
+      const userId = typeof window !== 'undefined' ? (window as any).__FAKE_USER_ID__ || 'user1' : 'user1';
+      const resp = await fetch('/api/files/signed-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path, bucket, userId })
+      });
+      
+      if (!resp.ok) {
+        const errorData = await resp.json().catch(() => ({}));
+        console.error('API 응답 오류:', resp.status, errorData);
+        throw new Error(`API 오류: ${resp.status} - ${errorData.error || '알 수 없는 오류'}`);
       }
-
-      const { data, error } = await supabase.storage
-        .from(bucket)
-        .createSignedUrl(path, 3600); // 1시간 유효
-
-      if (error) {
-        console.warn('다운로드 URL 생성 실패:', error);
-        return `https://via.placeholder.com/400x600/cccccc/666666?text=Download+File`;
+      
+      const data = await resp.json();
+      if (!data.url) {
+        throw new Error('URL이 응답에 포함되지 않았습니다.');
       }
-
-      return data.signedUrl;
+      
+      return data.url as string;
     } catch (error) {
       console.error('다운로드 URL 생성 오류:', error);
-      return `https://via.placeholder.com/400x600/cccccc/666666?text=Download+File`;
+      // 오류 발생 시 placeholder URL 반환
+      return `/api/placeholder/400/600?text=Download+File`;
     }
   }
 
@@ -121,7 +128,7 @@ export class StorageService {
       if (!supabase) {
         console.warn('Supabase 설정이 없습니다. 임시 이미지 URL을 반환합니다.');
         return {
-          url: `https://via.placeholder.com/400x600/cccccc/666666?text=Image+Upload`,
+          url: `/api/placeholder/400/600?text=Image+Upload`,
           path: `temp/${Date.now()}-${file.name}`
         };
       }
@@ -139,7 +146,7 @@ export class StorageService {
       if (error) {
         console.warn('이미지 업로드 실패, 임시 URL 반환:', error);
         return {
-          url: `https://via.placeholder.com/400x600/cccccc/666666?text=Image+Upload`,
+          url: `/api/placeholder/400/600?text=Image+Upload`,
           path: filePath
         };
       }
@@ -157,7 +164,7 @@ export class StorageService {
       console.error('이미지 업로드 오류:', error);
       // 오류가 발생해도 앱이 중단되지 않도록 임시 URL 반환
       return {
-        url: `https://via.placeholder.com/400x600/cccccc/666666?text=Image+Upload`,
+        url: `/api/placeholder/400/600?text=Image+Upload`,
         path: `temp/${Date.now()}-${file.name}`
       };
     }

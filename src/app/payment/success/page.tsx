@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -11,6 +11,41 @@ function PaymentSuccessContent() {
   const paymentKey = searchParams.get("paymentKey");
   const orderId = searchParams.get("orderId");
   const amount = searchParams.get("amount");
+  const itemsParam = searchParams.get("items");
+  const [confirmed, setConfirmed] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const items = useMemo<Array<{ id: number; quantity: number; price: number }>>(() => {
+    if (!itemsParam) return [];
+    try {
+      return JSON.parse(decodeURIComponent(itemsParam)) as Array<{ id: number; quantity: number; price: number }>;
+    } catch {
+      return [];
+    }
+  }, [itemsParam]);
+
+  useEffect(() => {
+    const confirm = async () => {
+      try {
+        // 임시 사용자 ID: 실제로는 세션에서 조회
+        const userId = "user1";
+        const res = await fetch("/api/payments/confirm", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ paymentKey, orderId, amount: Number(amount), userId, items: items.map((it: { id: number; quantity: number; price: number }) => ({ productId: it.id, quantity: it.quantity, price: it.price })) })
+        });
+        if (!res.ok) {
+          throw new Error("결제 확인 실패");
+        }
+        setConfirmed(true);
+      } catch (e: any) {
+        setError(e.message || "결제 확인 중 오류가 발생했습니다.");
+      }
+    };
+    if (amount && items.length > 0) {
+      confirm();
+    }
+  }, [paymentKey, orderId, amount, items]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -47,6 +82,12 @@ function PaymentSuccessContent() {
           </div>
 
           <div className="space-y-4">
+            {error && (
+              <div className="p-3 rounded bg-red-50 text-red-700 text-sm">{error}</div>
+            )}
+            {!error && !confirmed && (
+              <div className="p-3 rounded bg-yellow-50 text-yellow-700 text-sm">결제 확인 중입니다...</div>
+            )}
             <Button className="w-full" asChild>
               <Link href="/mypage">
                 구매 내역 확인
