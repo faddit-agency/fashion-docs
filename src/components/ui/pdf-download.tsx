@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Button } from "./button";
 import { PDFGenerator } from "@/lib/pdf-generator";
 import { Download, FileText, Image } from "lucide-react";

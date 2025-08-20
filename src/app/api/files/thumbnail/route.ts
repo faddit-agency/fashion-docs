@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
       }
     });
     return resp;
-  } catch (e) {
+      } catch {
     return NextResponse.redirect(new URL(`/api/placeholder/360/240?text=Error`, request.url));
   }
 }

@@ -5,7 +5,7 @@ import { useUser } from "@clerk/nextjs";
 import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import { FileUpload } from "@/components/ui/file-upload";
-import { formatPrice } from "@/lib/utils";
+
 import Link from "next/link";
 
 export default function SellerPage() {

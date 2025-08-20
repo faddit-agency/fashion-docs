@@ -12,6 +12,7 @@ import { Toggle } from "@/components/ui/toggle";
 import { DriveSelector } from "@/components/ui/drive-selector";
 import { TechnicalDrawingEditor } from "@/components/ui/technical-drawing-editor";
 import { FileText, X, FolderOpen } from "lucide-react";
+import Link from "next/link";
 
 interface WorksheetData {
   id?: string;
@@ -596,7 +597,7 @@ export default function WorksheetPage() {
           <div className="text-center">
             <h1 className="text-2xl font-bold text-foreground mb-4">로그인이 필요합니다</h1>
             <Button asChild className="bg-primary hover:bg-primary/90">
-              <a href="/sign-in">로그인하기</a>
+              <Link href="/sign-in">로그인하기</Link>
             </Button>
           </div>
         </div>

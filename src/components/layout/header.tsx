@@ -12,7 +12,7 @@ import { useTheme } from "@/contexts/theme-context";
 
 export function Header() {
   const { user, isLoaded } = useUser();
-  const { cartCount } = useCart(user?.id);
+  const { cartCount: _cartCount } = useCart(user?.id);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const pathname = usePathname();

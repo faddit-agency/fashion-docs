@@ -12,7 +12,7 @@ import {
   Redo, 
   Save, 
   X, 
-  Download,
+
   Move,
   Square,
   Circle,
@@ -338,7 +338,7 @@ export function TechnicalDrawingEditor({
           break;
       }
     });
-  }, [currentElements, selectedElement]);
+  }, [currentElements, selectedElement, imageLoaded]);
 
   useEffect(() => {
     renderCanvas();

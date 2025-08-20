@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import { FileDownload } from "@/components/ui/file-download";
-import { StorageService } from "@/lib/storage";
+
 import { DriveSelector } from "@/components/ui/drive-selector";
 import { TechnicalDrawingEditor } from "@/components/ui/technical-drawing-editor";
 
@@ -47,7 +47,7 @@ export default function DrivePage() {
           serverAssets = Array.from(byKey.values());
         } catch {}
         setAssets(serverAssets);
-      } catch (_e) {
+      } catch {
         setAssets([
           { id: "1", name: "패턴 DXF", path: "products/1/patterns/sample.dxf", category: "패턴", uploadedAt: new Date().toISOString(), fileType: "dxf" },
           { id: "2", name: "도식화 PDF", path: "products/1/specs/techpack.pdf", category: "인쇄", uploadedAt: new Date().toISOString(), fileType: "pdf" },

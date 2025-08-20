@@ -31,10 +31,11 @@ export async function GET(request: NextRequest) {
     if (!supabase && !supabaseAdmin) {
       console.log('Supabase not configured, returning demo data');
       // 로컬 데모 드라이브 병합 (있다면)
-      let localAssets: any[] = [];
+      const localAssets: any[] = [];
       try {
-        const raw = typeof window === 'undefined' ? null : (globalThis as any).localStorage?.getItem?.('demo_drive_assets');
         // Next.js 서버에는 window/localStorage가 없으므로 위 코드는 대부분 null임. 클라이언트에서 병합 처리함.
+        const raw = typeof window === 'undefined' ? null : (globalThis as any).localStorage?.getItem?.('demo_drive_assets');
+        // raw 변수는 사용하지 않지만 타입 체크를 위해 유지
       } catch {}
       const demoAssets = [
         { 
@@ -294,7 +295,7 @@ export async function POST(request: NextRequest) {
       const adminMod = await import('@/lib/supabase-admin');
       supabase = (mod as any).supabase || null;
       supabaseAdmin = (adminMod as any).supabaseAdmin || null;
-    } catch (e) {
+    } catch {
       // noop
     }
 
@@ -318,7 +319,7 @@ export async function POST(request: NextRequest) {
       console.warn('Failed to insert asset, returning mock success:', dbErr);
       return NextResponse.json({ success: true, asset: { id: `temp-${Date.now()}`, user_id: userId, name, path, url, category: category || '기타', uploadedAt: new Date().toISOString() } });
     }
-  } catch (_e) {
+  } catch {
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }

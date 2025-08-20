@@ -11,7 +11,7 @@ import { Product } from "@/lib/supabase";
 import { getSampleProducts } from "@/lib/sample-data";
 import { useCart } from "@/hooks/use-cart";
 import Link from "next/link";
-import { Search, Filter, X, Grid, List, Star, ShoppingCart, Check } from "lucide-react";
+import { Search, Filter, X, Grid, List, ShoppingCart, Check } from "lucide-react";
 
 export default function ProductsPage() {
   const { user } = useUser();

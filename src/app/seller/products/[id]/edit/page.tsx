@@ -6,8 +6,7 @@ import { useUser } from "@clerk/nextjs";
 import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import { FileUpload } from "@/components/ui/file-upload";
-import { formatPrice } from "@/lib/utils";
-import { sellerAPI } from "@/lib/database";
+
 import { Product } from "@/lib/supabase";
 import Link from "next/link";
 import { ArrowLeft, Save, Trash2 } from "lucide-react";

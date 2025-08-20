@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "./button";
-import { FileDownload } from "./file-download";
+
 import { X, Folder, FileText, Image, File } from "lucide-react";
 
 interface Asset {

@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { supabaseAdmin } from './supabase-admin';
+
 
 export class StorageService {
   // 파일 업로드
@@ -21,7 +21,7 @@ export class StorageService {
       const fileName = `${Date.now()}-${file.name}`;
       const filePath = path ? `${path}/${fileName}` : fileName;
 
-      const { data, error } = await supabase.storage
+      const { data: _data, error } = await supabase.storage
         .from(bucket)
         .upload(filePath, file, {
           cacheControl: '3600',
@@ -136,7 +136,7 @@ export class StorageService {
       const fileName = `${Date.now()}-${file.name}`;
       const filePath = path ? `${path}/${fileName}` : fileName;
 
-      const { data, error } = await supabase.storage
+      const { data: _data, error } = await supabase.storage
         .from(bucket)
         .upload(filePath, file, {
           cacheControl: '3600',

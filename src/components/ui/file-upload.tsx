@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Button } from "./button";
+
 import { StorageService } from "@/lib/storage";
 
 interface FileUploadProps {
@@ -30,12 +30,12 @@ export function FileUpload({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+          const _file = event.target.files?.[0];
+          if (!_file) return;
 
     try {
       // 파일 검증
-      StorageService.validateFile(file, maxSize);
+      StorageService.validateFile(_file, maxSize);
 
       setIsUploading(true);
       setUploadProgress(0);
@@ -52,7 +52,7 @@ export function FileUpload({
       }, 100);
 
       // 파일 업로드
-      const result = await StorageService.uploadFile(file, bucket, path);
+      const result = await StorageService.uploadFile(_file, bucket, path);
 
       clearInterval(progressInterval);
       setUploadProgress(100);
@@ -80,7 +80,7 @@ export function FileUpload({
     const files = event.dataTransfer.files;
     if (files.length === 0) return;
 
-    const file = files[0];
+    const _file = files[0];
     const input = fileInputRef.current;
     if (input) {
       input.files = files;

@@ -1,20 +1,7 @@
-import { authMiddleware } from "@clerk/nextjs";
-
-export default authMiddleware({
-  // 공개 라우트 (인증이 필요하지 않은 라우트)
-  publicRoutes: [
-    "/",
-    "/products",
-    "/products/(.*)",
-    "/sign-in(.*)",
-    "/sign-up(.*)",
-    "/api/webhooks(.*)",
-  ],
-  // 무시할 라우트
-  ignoredRoutes: [
-    "/api/webhooks(.*)",
-  ],
-});
+// 임시로 미들웨어 비활성화
+export function middleware() {
+  // 인증 로직은 각 페이지에서 처리
+}
 
 export const config = {
   matcher: ["/((?!.+\\.[\\w]+$|_next).*)", "/", "/(api|trpc)(.*)"],

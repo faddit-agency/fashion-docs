@@ -15,7 +15,7 @@ import { Product } from "@/lib/supabase";
 import { useCart } from "@/hooks/use-cart";
 import { getSampleProduct } from "@/lib/sample-data";
 import Link from "next/link";
-import { Star, ChevronLeft, ChevronRight, ZoomIn, Download, Eye, Heart, Share2, Copy, ArrowLeft, ShoppingCart, Check } from "lucide-react";
+import { Star, ChevronLeft, ChevronRight, ZoomIn, ArrowLeft, ShoppingCart, Check } from "lucide-react";
 
 // 샘플 리뷰 데이터
 const sampleReviews = [
@@ -51,7 +51,7 @@ const sampleReviews = [
 export default function ProductDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const { user, isLoaded } = useUser();
+  const { user } = useUser();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

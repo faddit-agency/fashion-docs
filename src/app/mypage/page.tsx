@@ -11,10 +11,10 @@ import { purchaseAPI, worksheetAPI, cartAPI } from "@/lib/database";
 import { Purchase, Worksheet, CartItem } from "@/lib/supabase";
 import { useCart } from "@/hooks/use-cart";
 import Link from "next/link";
-import { Download, Edit, FileText, Trash2, Plus, Minus, ShoppingCart, X, Save, User, Mail, Phone } from "lucide-react";
+import { Download, Edit, FileText, Trash2, Plus, Minus, ShoppingCart, X, Save, User } from "lucide-react";
 import { FileUpload } from "@/components/ui/file-upload";
 import { FileDownload } from "@/components/ui/file-download";
-import { StorageService } from "@/lib/storage";
+
 
 // 타입 정의
 interface UserProfile {
@@ -76,12 +76,12 @@ function ProfileEditModal({ isOpen, onClose, user, onProfileUpdate }: {
         if (saved) {
           savedProfile = JSON.parse(saved);
         }
-      } catch (err) {
-        // 프로덕션에서는 에러 로깅을 서비스로 대체
-        if (process.env.NODE_ENV === 'development') {
-          console.error('저장된 프로필 로딩 오류:', err);
+              } catch {
+          // 프로덕션에서는 에러 로깅을 서비스로 대체
+          if (process.env.NODE_ENV === 'development') {
+            console.error('저장된 프로필 로딩 오류');
+          }
         }
-      }
 
       setFormData({
         firstName: user?.firstName || '',
@@ -124,9 +124,9 @@ function ProfileEditModal({ isOpen, onClose, user, onProfileUpdate }: {
         onClose();
         setSuccess(false);
       }, 2000);
-    } catch (err) {
+    } catch {
       if (process.env.NODE_ENV === 'development') {
-        console.error('프로필 업데이트 오류:', err);
+        console.error('프로필 업데이트 오류');
       }
       setError('프로필 업데이트에 실패했습니다. 다시 시도해주세요.');
     } finally {
@@ -411,9 +411,9 @@ function MyPageContent() {
       const normalized = Array.from(uniqueById.values());
       setWorksheets(normalized);
       setCartItems(cartData || []);
-    } catch (err) {
+    } catch {
       if (process.env.NODE_ENV === 'development') {
-        console.error("데이터 로딩 오류:", err);
+        console.error("데이터 로딩 오류");
       }
       setError("데이터를 불러오는데 실패했습니다.");
       // 빈 배열로 설정
@@ -506,9 +506,9 @@ function MyPageContent() {
       await worksheetAPI.deleteWorksheet(worksheetId);
       setWorksheets(prev => prev.filter(w => w.id !== worksheetId));
       alert("작업지시서가 삭제되었습니다.");
-    } catch (err) {
+    } catch {
       if (process.env.NODE_ENV === 'development') {
-        console.error("작업지시서 삭제 오류:", err);
+        console.error("작업지시서 삭제 오류");
       }
       alert("작업지시서 삭제에 실패했습니다.");
     }
@@ -527,9 +527,9 @@ function MyPageContent() {
             : item
         )
       );
-    } catch (err) {
+    } catch {
       if (process.env.NODE_ENV === 'development') {
-        console.error("수량 변경 오류:", err);
+        console.error("수량 변경 오류");
       }
       alert("수량 변경에 실패했습니다.");
     }
@@ -541,9 +541,9 @@ function MyPageContent() {
       setCartItems(prev => prev.filter(item => item.id !== cartItemId));
       setSelectedCartItems(prev => prev.filter(id => id !== cartItemId));
       updateCartCount(-1);
-    } catch (err) {
+    } catch {
       if (process.env.NODE_ENV === 'development') {
-        console.error("상품 제거 오류:", err);
+        console.error("상품 제거 오류");
       }
       alert("상품 제거에 실패했습니다.");
     }
@@ -573,9 +573,9 @@ function MyPageContent() {
       setCartItems(prev => prev.filter(item => !selectedCartItems.includes(item.id)));
       setSelectedCartItems([]);
       updateCartCount(-selectedCartItems.length);
-    } catch (err) {
+    } catch {
       if (process.env.NODE_ENV === 'development') {
-        console.error("선택 상품 제거 오류:", err);
+        console.error("선택 상품 제거 오류");
       }
       alert("선택한 상품 제거에 실패했습니다.");
     }
@@ -822,7 +822,7 @@ function MyPageContent() {
                       const data = await res.json();
                       setAssets(data.assets || []);
                       alert('업로드 및 저장 완료');
-                    } catch (e) {
+                    } catch {
                       alert('자산 저장 중 오류가 발생했습니다');
                     }
                   }}

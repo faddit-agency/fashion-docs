@@ -471,7 +471,7 @@ export default function WorksheetDetailPage() {
           <div className="text-center">
             <h1 className="text-2xl font-bold text-foreground mb-4">로그인이 필요합니다</h1>
             <Button asChild className="bg-primary hover:bg-primary/90">
-              <a href="/sign-in">로그인하기</a>
+              <Link href="/sign-in">로그인하기</Link>
             </Button>
           </div>
         </div>

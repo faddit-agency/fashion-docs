@@ -1,4 +1,4 @@
-import { supabase, Product, Purchase, Worksheet, CartItem } from './supabase';
+import { supabase, Product, Purchase, Worksheet } from './supabase';
 
 // 상품 관련 함수들
 export const productAPI = {

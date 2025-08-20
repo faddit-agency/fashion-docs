@@ -20,7 +20,7 @@ interface PaymentModalProps {
   onSuccess: (paymentResult: any) => void;
 }
 
-export function PaymentModal({ isOpen, onClose, product, products, onSuccess }: PaymentModalProps) {
+export function PaymentModal({ isOpen, onClose, product, products }: PaymentModalProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   // 단일 상품을 배열로 변환
