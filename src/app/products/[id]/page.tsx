@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
 import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import { PaymentModal } from "@/components/payment/payment-modal";
@@ -14,7 +15,7 @@ import { Product } from "@/lib/supabase";
 import { useCart } from "@/hooks/use-cart";
 import { getSampleProduct } from "@/lib/sample-data";
 import Link from "next/link";
-import { Star, ChevronLeft, ChevronRight, ZoomIn, Download, Eye, Heart, Share2, Copy, ArrowLeft } from "lucide-react";
+import { Star, ChevronLeft, ChevronRight, ZoomIn, Download, Eye, Heart, Share2, Copy, ArrowLeft, ShoppingCart, Check } from "lucide-react";
 
 // 샘플 리뷰 데이터
 const sampleReviews = [
@@ -50,6 +51,7 @@ const sampleReviews = [
 export default function ProductDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { user, isLoaded } = useUser();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -59,7 +61,9 @@ export default function ProductDetailPage() {
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
   const [activeTab, setActiveTab] = useState<'description' | 'reviews' | 'specs'>('description');
-  const { updateCartCount } = useCart("user1"); // TODO: 실제 사용자 ID로 변경
+  const [cartLoading, setCartLoading] = useState(false);
+  const [cartSuccess, setCartSuccess] = useState(false);
+  const { updateCartCount } = useCart(user?.id);
 
   useEffect(() => {
     if (params.id) {
@@ -110,15 +114,30 @@ export default function ProductDetailPage() {
   const handleAddToCart = async () => {
     if (!product) return;
     
+    if (!user) {
+      alert("로그인이 필요합니다.");
+      router.push("/sign-in");
+      return;
+    }
+    
     try {
-      // TODO: 실제 사용자 ID로 변경
-      const userId = "user1";
-      await cartAPI.addToCart(userId, product.id, quantity);
-      updateCartCount(1);
-      alert("장바구니에 추가되었습니다!");
+      setCartLoading(true);
+      setCartSuccess(false);
+      
+      const result = await cartAPI.addToCart(user.id, product.id, quantity);
+      
+      if (result) {
+        updateCartCount(1);
+        setCartSuccess(true);
+        setTimeout(() => setCartSuccess(false), 3000);
+      } else {
+        alert("장바구니 추가에 실패했습니다.");
+      }
     } catch (err) {
       console.error("장바구니 추가 오류:", err);
       alert("장바구니 추가에 실패했습니다.");
+    } finally {
+      setCartLoading(false);
     }
   };
 
@@ -153,12 +172,12 @@ export default function ProductDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="min-h-screen bg-background text-foreground">
         <Header />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">상품을 불러오는 중...</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">상품을 불러오는 중...</p>
           </div>
         </div>
       </div>
@@ -167,15 +186,15 @@ export default function ProductDetailPage() {
 
   if (error || !product) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="min-h-screen bg-background text-foreground">
         <Header />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center py-12 animate-fade-in">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">상품을 찾을 수 없습니다</h1>
-            <p className="text-gray-600 mb-8 text-lg">{error || "요청하신 상품이 존재하지 않습니다."}</p>
+            <h1 className="text-3xl font-bold text-foreground mb-4">상품을 찾을 수 없습니다</h1>
+            <p className="text-muted-foreground mb-8 text-lg">{error || "요청하신 상품이 존재하지 않습니다."}</p>
             <Button 
               asChild
-              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover-lift"
+              className="bg-primary hover:bg-primary/90 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover-lift"
             >
               <Link href="/products" className="inline-flex items-center gap-2">
                 <ArrowLeft className="w-5 h-5" />
@@ -263,28 +282,28 @@ export default function ProductDetailPage() {
   const productTags = [product.category, product.gender, product.season, "패턴", "도식화", "디자인"];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-background text-foreground">
       <Header />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* 브레드크럼 */}
         <nav className="mb-8 animate-fade-in">
-          <ol className="flex items-center space-x-2 text-sm text-gray-500">
-            <li><Link href="/" className="hover:text-gray-700 transition-colors duration-200">홈</Link></li>
+          <ol className="flex items-center space-x-2 text-sm text-muted-foreground">
+            <li><Link href="/" className="hover:text-foreground transition-colors duration-200">홈</Link></li>
             <li>/</li>
-            <li><Link href="/products" className="hover:text-gray-700 transition-colors duration-200">상품</Link></li>
+            <li><Link href="/products" className="hover:text-foreground transition-colors duration-200">상품</Link></li>
             <li>/</li>
-            <li><Link href={`/products?category=${product.category}`} className="hover:text-gray-700 transition-colors duration-200">{product.category}</Link></li>
+            <li><Link href={`/products?category=${product.category}`} className="hover:text-foreground transition-colors duration-200">{product.category}</Link></li>
             <li>/</li>
-            <li className="text-gray-900 font-medium">{product.name}</li>
+            <li className="text-foreground font-medium">{product.name}</li>
           </ol>
         </nav>
 
-        <div className="card animate-fade-in">
+        <div className="bg-card border border-card-border rounded-lg p-8 animate-fade-in">
           <div className="grid md:grid-cols-2 gap-12 p-8">
             {/* 이미지 섹션 */}
             <div>
-              <div className="relative aspect-[3/4] bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl mb-6 overflow-hidden group hover-lift">
+              <div className="relative aspect-[3/4] bg-gradient-to-br from-muted to-muted/80 rounded-2xl mb-6 overflow-hidden group hover-lift">
                 {product.image_urls && product.image_urls.length > 0 ? (
                   <>
                     <img 
@@ -295,9 +314,9 @@ export default function ProductDetailPage() {
                     <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300 flex items-center justify-center">
                       <button
                         onClick={() => setShowImageModal(true)}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white bg-opacity-95 p-3 rounded-full hover:bg-opacity-100 shadow-lg hover-lift"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-background bg-opacity-95 p-3 rounded-full hover:bg-opacity-100 shadow-lg hover-lift"
                       >
-                        <ZoomIn className="w-6 h-6 text-gray-700" />
+                        <ZoomIn className="w-6 h-6 text-foreground" />
                       </button>
                     </div>
                     
@@ -306,21 +325,21 @@ export default function ProductDetailPage() {
                       <>
                         <button
                           onClick={prevImage}
-                          className="absolute left-3 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-90 p-2 rounded-full hover:bg-opacity-100 transition-all shadow-lg hover-lift"
+                          className="absolute left-3 top-1/2 transform -translate-y-1/2 bg-background bg-opacity-90 p-2 rounded-full hover:bg-opacity-100 transition-all shadow-lg hover-lift"
                         >
-                          <ChevronLeft className="w-5 h-5 text-gray-700" />
+                          <ChevronLeft className="w-5 h-5 text-foreground" />
                         </button>
                         <button
                           onClick={nextImage}
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-90 p-2 rounded-full hover:bg-opacity-100 transition-all shadow-lg hover-lift"
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-background bg-opacity-90 p-2 rounded-full hover:bg-opacity-100 transition-all shadow-lg hover-lift"
                         >
-                          <ChevronRight className="w-5 h-5 text-gray-700" />
+                          <ChevronRight className="w-5 h-5 text-foreground" />
                         </button>
                       </>
                     )}
                   </>
                 ) : (
-                  <div className="text-gray-500 text-lg flex items-center justify-center">상품 이미지</div>
+                  <div className="text-muted-foreground text-lg flex items-center justify-center">상품 이미지</div>
                 )}
               </div>
               
@@ -331,8 +350,8 @@ export default function ProductDetailPage() {
                     <button
                       key={index}
                       onClick={() => setSelectedImage(index)}
-                      className={`w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl border-2 overflow-hidden transition-all hover-lift ${
-                        selectedImage === index ? 'border-purple-500 scale-105 shadow-lg' : 'border-gray-200 hover:border-gray-300'
+                      className={`w-16 h-16 bg-gradient-to-br from-muted to-muted/80 rounded-xl border-2 overflow-hidden transition-all hover-lift ${
+                        selectedImage === index ? 'border-primary scale-105 shadow-lg' : 'border-border hover:border-border/80'
                       }`}
                     >
                       {product.image_urls && product.image_urls[index] ? (
@@ -342,7 +361,7 @@ export default function ProductDetailPage() {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="text-xs text-gray-500 flex items-center justify-center">이미지 {index + 1}</div>
+                        <div className="text-xs text-muted-foreground flex items-center justify-center">이미지 {index + 1}</div>
                       )}
                     </button>
                   ))}
@@ -354,25 +373,25 @@ export default function ProductDetailPage() {
             <div>
               <div className="mb-8">
                 <div className="flex items-center space-x-3 mb-4">
-                  <span className="text-sm text-gray-600 bg-gradient-to-r from-purple-100 to-pink-100 px-3 py-1 rounded-full font-medium">
+                  <span className="text-sm text-primary bg-primary/10 px-3 py-1 rounded-full font-medium">
                     {product.category}
                   </span>
-                  <span className="text-sm text-gray-500">•</span>
-                  <span className="text-sm text-gray-500 font-medium">{product.gender}</span>
-                  <span className="text-sm text-gray-500">•</span>
-                  <span className="text-sm text-gray-500 font-medium">{product.season}</span>
+                  <span className="text-sm text-muted-foreground">•</span>
+                  <span className="text-sm text-muted-foreground font-medium">{product.gender}</span>
+                  <span className="text-sm text-muted-foreground">•</span>
+                  <span className="text-sm text-muted-foreground font-medium">{product.season}</span>
                 </div>
                 
-                <h1 className="text-4xl font-bold text-gray-900 mb-6 leading-tight">
+                <h1 className="text-4xl font-bold text-foreground mb-6 leading-tight">
                   {product.name}
                 </h1>
                 
                 <div className="flex items-center space-x-4 mb-6">
 
-                  <span className="text-4xl font-bold text-gray-900">
+                  <span className="text-4xl font-bold text-foreground">
                     {formatPrice(product.price)}
                   </span>
-                  <span className="text-lg text-gray-500">원</span>
+                  <span className="text-lg text-muted-foreground">원</span>
                 </div>
 
                 {/* 평점 및 리뷰 */}
@@ -380,12 +399,12 @@ export default function ProductDetailPage() {
                   <div className="flex items-center space-x-2">
                     <div className="flex items-center space-x-1">
                       <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                      <span className="text-lg font-semibold text-gray-900">4.8</span>
+                      <span className="text-lg font-semibold text-foreground">4.8</span>
                     </div>
-                    <span className="text-sm text-gray-500">(127개 리뷰)</span>
+                    <span className="text-sm text-muted-foreground">(127개 리뷰)</span>
                   </div>
-                  <span className="text-sm text-gray-500">•</span>
-                  <span className="text-sm text-gray-500 font-medium">판매자: 패턴마스터</span>
+                  <span className="text-sm text-muted-foreground">•</span>
+                  <span className="text-sm text-muted-foreground font-medium">판매자: 패턴마스터</span>
                 </div>
 
                 {/* 상품 태그 */}
@@ -404,25 +423,70 @@ export default function ProductDetailPage() {
                 </div>
               </div>
 
+              {/* 수량 선택 */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  수량
+                </label>
+                <div className="flex items-center space-x-3">
+                  <button
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    className="w-10 h-10 rounded-lg border border-border flex items-center justify-center hover:bg-muted transition-colors"
+                    disabled={quantity <= 1}
+                  >
+                    <span className="text-foreground">-</span>
+                  </button>
+                  <span className="w-16 text-center font-medium text-foreground">
+                    {quantity}
+                  </span>
+                  <button
+                    onClick={() => setQuantity(quantity + 1)}
+                    className="w-10 h-10 rounded-lg border border-border flex items-center justify-center hover:bg-muted transition-colors"
+                  >
+                    <span className="text-foreground">+</span>
+                  </button>
+                </div>
+              </div>
+
               {/* 구매 버튼 */}
               <div className="space-y-4 mb-8">
                 <Button 
                   onClick={handlePurchase}
-                  className="w-full h-14 text-lg bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover-lift"
+                  className="w-full h-14 text-lg bg-primary hover:bg-primary/90 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover-lift"
                 >
                   구매하기
                 </Button>
                 <Button 
                   variant="outline"
                   onClick={handleAddToCart}
-                  className="w-full h-14 text-lg border-2 border-gray-200 hover:border-purple-500 hover:text-purple-600 hover:bg-purple-50 transition-all duration-200"
+                  disabled={cartLoading}
+                  className={`w-full h-14 text-lg border-2 transition-all duration-200 ${
+                    cartSuccess 
+                      ? 'border-green-500 text-green-600 bg-green-50 dark:bg-green-500/10' 
+                      : 'border-border hover:border-primary hover:text-primary hover:bg-primary/5'
+                  }`}
                 >
-                  장바구니에 추가
+                  {cartLoading ? (
+                    <div className="flex items-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                      추가 중...
+                    </div>
+                  ) : cartSuccess ? (
+                    <div className="flex items-center">
+                      <Check className="w-4 h-4 mr-2" />
+                      장바구니에 추가됨
+                    </div>
+                  ) : (
+                    <div className="flex items-center">
+                      <ShoppingCart className="w-4 h-4 mr-2" />
+                      장바구니에 추가
+                    </div>
+                  )}
                 </Button>
               </div>
 
               {/* 탭 네비게이션 */}
-              <div className="border-b border-gray-200 mb-8">
+              <div className="border-b border-border mb-8">
                 <nav className="flex space-x-8">
                   {[
                     { id: 'description', label: '상품 설명' },
@@ -434,8 +498,8 @@ export default function ProductDetailPage() {
                       onClick={() => setActiveTab(tab.id as any)}
                       className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
                         activeTab === tab.id
-                          ? 'border-purple-500 text-purple-600'
-                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                          ? 'border-primary text-primary'
+                          : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
                       }`}
                     >
                       {tab.label}
@@ -448,40 +512,40 @@ export default function ProductDetailPage() {
               <div className="min-h-[400px]">
                 {activeTab === 'description' && (
                   <div className="animate-fade-in">
-                    <p className="text-gray-700 leading-relaxed mb-8 text-lg">
+                    <p className="text-foreground leading-relaxed mb-8 text-lg">
                       {product.description}
                     </p>
                     
                     <div className="mb-8">
-                      <h3 className="text-xl font-semibold text-gray-900 mb-6">주요 특징</h3>
+                      <h3 className="text-xl font-semibold text-foreground mb-6">주요 특징</h3>
                       <ul className="space-y-4">
                         {features.map((feature, index) => (
                           <li key={index} className="flex items-center space-x-4">
-                            <div className="w-3 h-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"></div>
-                            <span className="text-gray-700 text-lg">{feature}</span>
+                            <div className="w-3 h-3 bg-primary rounded-full"></div>
+                            <span className="text-foreground text-lg">{feature}</span>
                           </li>
                         ))}
                       </ul>
                     </div>
 
-                    <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-8 rounded-2xl border border-purple-100">
-                      <h3 className="text-xl font-semibold text-gray-900 mb-6">파일 정보</h3>
+                    <div className="bg-muted p-8 rounded-2xl border border-border">
+                      <h3 className="text-xl font-semibold text-foreground mb-6">파일 정보</h3>
                       <div className="grid grid-cols-2 gap-6 text-lg">
                         <div>
-                          <span className="text-gray-600">파일 크기:</span>
-                          <p className="font-semibold text-gray-900">약 2.5MB</p>
+                          <span className="text-muted-foreground">파일 크기:</span>
+                          <p className="font-semibold text-foreground">약 2.5MB</p>
                         </div>
                         <div>
-                          <span className="text-gray-600">다운로드:</span>
-                          <p className="font-semibold text-gray-900">구매 후 즉시 가능</p>
+                          <span className="text-muted-foreground">다운로드:</span>
+                          <p className="font-semibold text-foreground">구매 후 즉시 가능</p>
                         </div>
                         <div>
-                          <span className="text-gray-600">사용 기간:</span>
-                          <p className="font-semibold text-gray-900">무제한</p>
+                          <span className="text-muted-foreground">사용 기간:</span>
+                          <p className="font-semibold text-foreground">무제한</p>
                         </div>
                         <div>
-                          <span className="text-gray-600">파일 형식:</span>
-                          <p className="font-semibold text-gray-900">{specifications.fileFormat}</p>
+                          <span className="text-muted-foreground">파일 형식:</span>
+                          <p className="font-semibold text-foreground">{specifications.fileFormat}</p>
                         </div>
                       </div>
                     </div>
@@ -492,13 +556,13 @@ export default function ProductDetailPage() {
                   <div className="animate-fade-in">
                     <div className="flex items-center justify-between mb-8">
                       <div>
-                        <h3 className="text-xl font-semibold text-gray-900">리뷰</h3>
-                        <p className="text-sm text-gray-500">총 {sampleReviews.length}개의 리뷰</p>
+                        <h3 className="text-xl font-semibold text-foreground">리뷰</h3>
+                        <p className="text-sm text-muted-foreground">총 {sampleReviews.length}개의 리뷰</p>
                       </div>
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        className="border-2 border-gray-200 hover:border-purple-500 hover:text-purple-600 hover:bg-purple-50 transition-all duration-200"
+                        className="border-2 border-border hover:border-primary hover:text-primary hover:bg-primary/5 transition-all duration-200"
                       >
                         리뷰 작성
                       </Button>
@@ -518,27 +582,27 @@ export default function ProductDetailPage() {
 
                 {activeTab === 'specs' && (
                   <div className="animate-fade-in">
-                    <h3 className="text-xl font-semibold text-gray-900 mb-8">상품 스펙</h3>
+                    <h3 className="text-xl font-semibold text-foreground mb-8">상품 스펙</h3>
                     <div className="grid grid-cols-2 gap-8">
-                      <div className="card">
-                        <span className="text-sm text-gray-600 mb-2">원단</span>
-                        <p className="font-semibold text-gray-900 text-lg">{specifications.material}</p>
+                      <div className="bg-card border border-card-border rounded-lg p-6">
+                        <span className="text-sm text-muted-foreground mb-2">원단</span>
+                        <p className="font-semibold text-foreground text-lg">{specifications.material}</p>
                       </div>
-                      <div className="card">
-                        <span className="text-sm text-gray-600 mb-2">중량</span>
-                        <p className="font-semibold text-gray-900 text-lg">{specifications.weight}</p>
+                      <div className="bg-card border border-card-border rounded-lg p-6">
+                        <span className="text-sm text-muted-foreground mb-2">중량</span>
+                        <p className="font-semibold text-foreground text-lg">{specifications.weight}</p>
                       </div>
-                      <div className="card">
-                        <span className="text-sm text-gray-600 mb-2">사이즈</span>
-                        <p className="font-semibold text-gray-900 text-lg">{specifications.sizes.join(", ")}</p>
+                      <div className="bg-card border border-card-border rounded-lg p-6">
+                        <span className="text-sm text-muted-foreground mb-2">사이즈</span>
+                        <p className="font-semibold text-foreground text-lg">{specifications.sizes.join(", ")}</p>
                       </div>
-                      <div className="card">
-                        <span className="text-sm text-gray-600 mb-2">색상</span>
-                        <p className="font-semibold text-gray-900 text-lg">{specifications.colors.join(", ")}</p>
+                      <div className="bg-card border border-card-border rounded-lg p-6">
+                        <span className="text-sm text-muted-foreground mb-2">색상</span>
+                        <p className="font-semibold text-foreground text-lg">{specifications.colors.join(", ")}</p>
                       </div>
-                      <div className="col-span-2 card">
-                        <span className="text-sm text-gray-600 mb-2">파일 형식</span>
-                        <p className="font-semibold text-gray-900 text-lg">{specifications.fileFormat}</p>
+                      <div className="col-span-2 bg-card border border-card-border rounded-lg p-6">
+                        <span className="text-sm text-muted-foreground mb-2">파일 형식</span>
+                        <p className="font-semibold text-foreground text-lg">{specifications.fileFormat}</p>
                       </div>
                     </div>
                   </div>
@@ -550,20 +614,20 @@ export default function ProductDetailPage() {
 
         {/* 관련 상품 섹션 */}
         <div className="mt-16 animate-fade-in">
-          <h2 className="text-3xl font-bold text-gray-900 mb-8">관련 상품</h2>
+          <h2 className="text-3xl font-bold text-foreground mb-8">관련 상품</h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {[1, 2, 3, 4].map((item, index) => (
               <div 
                 key={item} 
-                className="card hover-lift animate-fade-in"
+                className="bg-card border border-card-border rounded-lg p-6 hover-lift animate-fade-in"
                 style={{animationDelay: `${index * 0.1}s`}}
               >
-                <div className="aspect-[3/4] bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center mb-4">
-                  <div className="text-gray-500 text-sm">관련 상품 {item}</div>
+                <div className="aspect-[3/4] bg-gradient-to-br from-muted to-muted/80 rounded-xl flex items-center justify-center mb-4">
+                  <div className="text-muted-foreground text-sm">관련 상품 {item}</div>
                 </div>
                 <div className="space-y-2">
-                  <h3 className="font-semibold text-gray-900">관련 상품 {item}</h3>
-                  <p className="text-xl font-bold text-gray-900">
+                  <h3 className="font-semibold text-foreground">관련 상품 {item}</h3>
+                  <p className="text-xl font-bold text-foreground">
                     {formatPrice(30000 + item * 10000)}
                   </p>
                 </div>

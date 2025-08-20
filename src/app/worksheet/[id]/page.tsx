@@ -6,7 +6,15 @@ import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
 import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
-import { TechnicalDrawingEditor } from "@/components/ui/technical-drawing-editor";
+import dynamic from "next/dynamic";
+const TechnicalDrawingEditor = dynamic(
+  () => import("@/components/ui/technical-drawing-editor").then(m => m.TechnicalDrawingEditor),
+  { ssr: false }
+);
+const BrandLoader = dynamic(
+  () => import("@/components/ui/brand-loader").then(m => m.BrandLoader),
+  { ssr: false }
+);
 import { PDFDownload } from "@/components/ui/pdf-download";
 import { Toggle } from "@/components/ui/toggle";
 import { Save } from "lucide-react";
@@ -226,6 +234,144 @@ export default function WorksheetDetailPage() {
     });
   };
 
+  // 사이즈 관리 함수들 (생성 화면과 동일)
+  const addSize = () => {
+    if (!worksheetData) return;
+    const newSize = `S${worksheetData.sizeSpec.sizes.length + 1}`;
+    setWorksheetData(prev => ({
+      ...prev!,
+      sizeSpec: {
+        ...prev!.sizeSpec,
+        sizes: [...prev!.sizeSpec.sizes, newSize],
+        measurements: {
+          ...prev!.sizeSpec.measurements,
+          [newSize]: { totalLength: 0, shoulderWidth: 0, armhole: 0, chestCircumference: 0 }
+        }
+      },
+      quantityByColorSize: {
+        ...prev!.quantityByColorSize,
+        sizes: [...prev!.quantityByColorSize.sizes, newSize],
+        quantities: Object.fromEntries(
+          prev!.quantityByColorSize.colors.map(color => [
+            color,
+            { ...prev!.quantityByColorSize.quantities[color], [newSize]: 0 }
+          ])
+        )
+      }
+    }));
+  };
+
+  const removeSize = (sizeToRemove: string) => {
+    if (!worksheetData || worksheetData.sizeSpec.sizes.length <= 1) return;
+    setWorksheetData(prev => {
+      const newMeasurements = { ...prev!.sizeSpec.measurements } as any;
+      delete newMeasurements[sizeToRemove];
+      const newQuantities = Object.fromEntries(
+        prev!.quantityByColorSize.colors.map(color => {
+          const colorQuantities = { ...prev!.quantityByColorSize.quantities[color] } as any;
+          delete colorQuantities[sizeToRemove];
+          return [color, colorQuantities];
+        })
+      ) as any;
+      return {
+        ...prev!,
+        sizeSpec: {
+          ...prev!.sizeSpec,
+          sizes: prev!.sizeSpec.sizes.filter(s => s !== sizeToRemove),
+          measurements: newMeasurements
+        },
+        quantityByColorSize: {
+          ...prev!.quantityByColorSize,
+          sizes: prev!.quantityByColorSize.sizes.filter(s => s !== sizeToRemove),
+          quantities: newQuantities
+        }
+      } as any;
+    });
+  };
+
+  // 색상 관리 함수들
+  const addColor = () => {
+    if (!worksheetData) return;
+    const newColor = `색상${worksheetData.quantityByColorSize.colors.length + 1}`;
+    setWorksheetData(prev => ({
+      ...prev!,
+      quantityByColorSize: {
+        ...prev!.quantityByColorSize,
+        colors: [...prev!.quantityByColorSize.colors, newColor],
+        quantities: {
+          ...prev!.quantityByColorSize.quantities,
+          [newColor]: Object.fromEntries(prev!.quantityByColorSize.sizes.map(size => [size, 0])) as any
+        }
+      }
+    }));
+  };
+
+  const removeColor = (colorToRemove: string) => {
+    if (!worksheetData || worksheetData.quantityByColorSize.colors.length <= 1) return;
+    setWorksheetData(prev => {
+      const newQuantities = { ...prev!.quantityByColorSize.quantities } as any;
+      delete newQuantities[colorToRemove];
+      return {
+        ...prev!,
+        quantityByColorSize: {
+          ...prev!.quantityByColorSize,
+          colors: prev!.quantityByColorSize.colors.filter(c => c !== colorToRemove),
+          quantities: newQuantities
+        }
+      } as any;
+    });
+  };
+
+  // 부자재 관리
+  const addSubMaterial = () => {
+    if (!worksheetData) return;
+    setWorksheetData(prev => ({
+      ...prev!,
+      subMaterials: [...prev!.subMaterials, { name: '', color: '', specification: '', quantity: 0 }]
+    }));
+  };
+
+  const removeSubMaterial = (index: number) => {
+    if (!worksheetData) return;
+    setWorksheetData(prev => ({
+      ...prev!,
+      subMaterials: prev!.subMaterials.filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateSubMaterial = (index: number, field: string, value: string | number) => {
+    if (!worksheetData) return;
+    setWorksheetData(prev => ({
+      ...prev!,
+      subMaterials: prev!.subMaterials.map((m, i) => (i === index ? { ...m, [field]: value } : m))
+    }));
+  };
+
+  // 원단 정보 관리
+  const addFabricInfo = () => {
+    if (!worksheetData) return;
+    setWorksheetData(prev => ({
+      ...prev!,
+      fabricInfo: [...prev!.fabricInfo, { location: '', companyItem: '', color: '', sizeUnitPrice: '', composition: '', yield: '' }]
+    }));
+  };
+
+  const removeFabricInfo = (index: number) => {
+    if (!worksheetData) return;
+    setWorksheetData(prev => ({
+      ...prev!,
+      fabricInfo: prev!.fabricInfo.filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateFabricInfo = (index: number, field: string, value: string) => {
+    if (!worksheetData) return;
+    setWorksheetData(prev => ({
+      ...prev!,
+      fabricInfo: prev!.fabricInfo.map((info, i) => (i === index ? { ...info, [field]: value } : info))
+    }));
+  };
+
   const calculateTotalByColor = (color: string) => {
     if (!worksheetData) return 0;
     return worksheetData.quantityByColorSize.sizes.reduce((total, size) => {
@@ -275,7 +421,9 @@ export default function WorksheetDetailPage() {
         },
         body: JSON.stringify({
           worksheetData,
-          userId: user.id
+          userId: user.id,
+          worksheetId: Number(worksheetId),
+          forceCreate: false
         }),
       });
 
@@ -284,6 +432,25 @@ export default function WorksheetDetailPage() {
       if (data.success) {
         setSaveMessage(data.message);
         setLastSavedAt(new Date().toISOString());
+        // 드라이브에도 작업지시서 항목 추가 (동일 로직)
+        try {
+          const assetName = `${worksheetData.title || '작업지시서'}.json`;
+          const assetPath = `worksheets/${String(data.id || Date.now())}.json`;
+          await fetch('/api/drive/assets', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: user.id, name: assetName, path: assetPath, url: '', category: '작업지시서' })
+          }).catch(() => {});
+          // 로컬 데모 드라이브 반영
+          try {
+            const driveKey = 'demo_drive_assets';
+            const prevDriveJson = typeof window !== 'undefined' ? window.localStorage.getItem(driveKey) : null;
+            const prevDrive = prevDriveJson ? JSON.parse(prevDriveJson) : [];
+            const newAsset = { id: `local-${Date.now()}`, user_id: user.id, name: assetName, path: assetPath, url: '', category: '작업지시서', uploadedAt: new Date().toISOString() };
+            const mergedDrive = [newAsset, ...prevDrive.filter((a: any) => a.path !== newAsset.path)];
+            if (typeof window !== 'undefined') window.localStorage.setItem(driveKey, JSON.stringify(mergedDrive));
+          } catch {}
+        } catch {}
         setTimeout(() => setSaveMessage(null), 3000);
       } else {
         setSaveMessage('저장에 실패했습니다.');
@@ -314,15 +481,7 @@ export default function WorksheetDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen section-gray">
-        <Header />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-gray-600">작업지시서를 불러오는 중...</p>
-          </div>
-        </div>
-      </div>
+      <BrandLoader />
     );
   }
 
@@ -347,11 +506,12 @@ export default function WorksheetDetailPage() {
     <div className="h-screen flex flex-col overflow-hidden">
       <Header />
       
-      <div className="flex-1 flex overflow-hidden">
-        {/* 고정 헤더 */}
-        <div className="border-b border-border bg-background flex-shrink-0">
-          <div className="flex justify-between items-center p-6">
-            <div className="flex items-center space-x-4">
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* 고정 헤더: 전체 상단에 가로로 꽉 차게 */}
+        <div className="flex-shrink-0">
+          <div className="w-full border-b border-border bg-background">
+            <div className="flex justify-between items-center px-4 py-3">
+            <div className="flex items-center gap-4 flex-1">
               <div className="flex items-center space-x-3">
                 <span className="text-sm font-medium text-muted-foreground">세부정보</span>
                 <div className="flex items-center space-x-2">
@@ -366,24 +526,20 @@ export default function WorksheetDetailPage() {
                   </span>
                 </div>
               </div>
-              {isEditMode ? (
-                <input
-                  type="text"
-                  value={worksheetData.title}
-                  onChange={(e) => handleDirectEdit('title', e.target.value)}
-                  className="text-2xl font-bold text-foreground bg-transparent border-b border-transparent hover:border-gray-300 focus:border-primary focus:outline-none px-2 py-1"
-                />
-              ) : (
-                <h1 className="text-2xl font-bold text-foreground">{worksheetData.title}</h1>
-              )}
+              <div>
+                {isEditMode ? (
+                  <input
+                    type="text"
+                    value={worksheetData.title}
+                    onChange={(e) => handleDirectEdit('title', e.target.value)}
+                    className="text-2xl font-bold text-foreground bg-transparent border-b border-transparent hover:border-gray-300 focus:border-primary focus:outline-none px-2 py-1"
+                  />
+                ) : (
+                  <h1 className="text-2xl font-bold text-foreground">{worksheetData.title}</h1>
+                )}
+              </div>
             </div>
-            <div className="flex items-center space-x-4">
-              {lastSavedAt && (
-                <span className="text-xs text-muted-foreground whitespace-nowrap">
-                  마지막 수정: {new Date(lastSavedAt).toLocaleString()}
-                </span>
-              )}
-              <div className="flex space-x-2">
+            <div className="ml-auto flex items-center space-x-2">
               <Button 
                 variant="outline" 
                 onClick={() => setIsEditMode(!isEditMode)}
@@ -420,9 +576,9 @@ export default function WorksheetDetailPage() {
                 variant="primary"
                 size="md"
               />
-              </div>
             </div>
           </div>
+        </div>
         </div>
 
         {/* 저장 메시지 알림 */}
@@ -439,7 +595,7 @@ export default function WorksheetDetailPage() {
         )}
 
         {/* 메인 콘텐츠 영역 */}
-        <div ref={worksheetRef} className="flex-1 flex overflow-hidden">
+        <div className="flex-1 flex overflow-hidden">
           {/* 기본정보 섹션 */}
           {showDetails && (
             <div className="w-80 border-r border-border bg-muted overflow-y-auto flex-shrink-0">
@@ -523,6 +679,113 @@ export default function WorksheetDetailPage() {
                       <option value="2024 F/W">2024 F/W</option>
                     </select>
                   </div>
+
+                  {/* 추가 정보 (생성 화면과 동일) */}
+                  <div className="pt-4 border-t border-border">
+                    <h3 className="text-sm font-medium text-muted-foreground mb-3">추가 정보</h3>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs text-muted-foreground mb-1">#의뢰일</label>
+                        <input 
+                          type="date" 
+                          value={worksheetData.additionalInfo.requestDate}
+                          onChange={(e) => handleDirectEdit('additionalInfo.requestDate', e.target.value)}
+                          className="input w-full text-sm"
+                          readOnly={!isEditMode}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-muted-foreground mb-1">#납기일</label>
+                        <input 
+                          type="date" 
+                          value={worksheetData.additionalInfo.deliveryDate}
+                          onChange={(e) => handleDirectEdit('additionalInfo.deliveryDate', e.target.value)}
+                          className="input w-full text-sm"
+                          readOnly={!isEditMode}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-muted-foreground mb-1">#제품명</label>
+                        <input 
+                          type="text" 
+                          value={worksheetData.additionalInfo.productName}
+                          onChange={(e) => handleDirectEdit('additionalInfo.productName', e.target.value)}
+                          className="input w-full text-sm"
+                          readOnly={!isEditMode}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-muted-foreground mb-1">#샘플번호</label>
+                        <input 
+                          type="text" 
+                          value={worksheetData.additionalInfo.sampleNumber}
+                          onChange={(e) => handleDirectEdit('additionalInfo.sampleNumber', e.target.value)}
+                          className="input w-full text-sm"
+                          readOnly={!isEditMode}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-muted-foreground mb-1">#제품번호</label>
+                        <input 
+                          type="text" 
+                          value={worksheetData.additionalInfo.productNumber}
+                          onChange={(e) => handleDirectEdit('additionalInfo.productNumber', e.target.value)}
+                          className="input w-full text-sm"
+                          readOnly={!isEditMode}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-muted-foreground mb-1">#제조사</label>
+                        <input 
+                          type="text" 
+                          value={worksheetData.additionalInfo.manufacturer}
+                          onChange={(e) => handleDirectEdit('additionalInfo.manufacturer', e.target.value)}
+                          className="input w-full text-sm"
+                          readOnly={!isEditMode}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-muted-foreground mb-1">#담당자 1</label>
+                        <input 
+                          type="text" 
+                          value={worksheetData.additionalInfo.contact1}
+                          onChange={(e) => handleDirectEdit('additionalInfo.contact1', e.target.value)}
+                          className="input w-full text-sm"
+                          readOnly={!isEditMode}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-muted-foreground mb-1">#담당자 2</label>
+                        <input 
+                          type="text" 
+                          value={worksheetData.additionalInfo.contact2}
+                          onChange={(e) => handleDirectEdit('additionalInfo.contact2', e.target.value)}
+                          className="input w-full text-sm"
+                          readOnly={!isEditMode}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-muted-foreground mb-1">#담당자 3</label>
+                        <input 
+                          type="text" 
+                          value={worksheetData.additionalInfo.contact3}
+                          onChange={(e) => handleDirectEdit('additionalInfo.contact3', e.target.value)}
+                          className="input w-full text-sm"
+                          readOnly={!isEditMode}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-muted-foreground mb-1">연락처</label>
+                        <input 
+                          type="text" 
+                          value={worksheetData.additionalInfo.contactInfo}
+                          onChange={(e) => handleDirectEdit('additionalInfo.contactInfo', e.target.value)}
+                          className="input w-full text-sm"
+                          readOnly={!isEditMode}
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -530,7 +793,7 @@ export default function WorksheetDetailPage() {
 
           {/* 워크시트 콘텐츠 */}
           <div className={`${showChat ? 'w-2/3' : 'w-full'} overflow-y-auto h-full`}>
-            <div className="h-full">
+            <div ref={worksheetRef} className="h-full">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6 h-full">
                 
                 {/* 도식화 */}
@@ -608,6 +871,9 @@ export default function WorksheetDetailPage() {
                         <option value="inch/총장">inch/총장</option>
                       </select>
                     </div>
+                    {isEditMode && (
+                      <Button variant="outline" size="sm" onClick={addSize}>사이즈 추가</Button>
+                    )}
                   </div>
                   <div className="overflow-x-auto">
                     <table className="min-w-full text-sm">
@@ -615,7 +881,14 @@ export default function WorksheetDetailPage() {
                         <tr className="border-b border-border">
                           <th className="text-left py-2 text-muted-foreground">사이즈</th>
                           {worksheetData.sizeSpec.sizes.map(size => (
-                            <th key={size} className="text-center py-2 text-muted-foreground">{size}</th>
+                            <th key={size} className="text-center py-2 text-muted-foreground">
+                              <div className="flex items-center justify-center space-x-1">
+                                <span>{size}</span>
+                                {isEditMode && worksheetData.sizeSpec.sizes.length > 1 && (
+                                  <button onClick={() => removeSize(size)} className="text-red-500 hover:text-red-700 text-xs">×</button>
+                                )}
+                              </div>
+                            </th>
                           ))}
                         </tr>
                       </thead>
@@ -624,7 +897,11 @@ export default function WorksheetDetailPage() {
                           <td className="py-2 text-foreground">총장</td>
                           {worksheetData.sizeSpec.sizes.map(size => (
                             <td key={size} className="text-center py-2 text-foreground">
-                              {worksheetData.sizeSpec.measurements[size]?.totalLength || '-'}
+                              {isEditMode ? (
+                                <input type="number" value={worksheetData.sizeSpec.measurements[size]?.totalLength || 0} onChange={(e) => handleDirectEdit(`sizeSpec.measurements.${size}.totalLength`, Number(e.target.value))} className="input w-24 text-center text-sm" />
+                              ) : (
+                                worksheetData.sizeSpec.measurements[size]?.totalLength || '-'
+                              )}
                             </td>
                           ))}
                         </tr>
@@ -632,7 +909,11 @@ export default function WorksheetDetailPage() {
                           <td className="py-2 text-foreground">어깨</td>
                           {worksheetData.sizeSpec.sizes.map(size => (
                             <td key={size} className="text-center py-2 text-foreground">
-                              {worksheetData.sizeSpec.measurements[size]?.shoulderWidth || '-'}
+                              {isEditMode ? (
+                                <input type="number" value={worksheetData.sizeSpec.measurements[size]?.shoulderWidth || 0} onChange={(e) => handleDirectEdit(`sizeSpec.measurements.${size}.shoulderWidth`, Number(e.target.value))} className="input w-24 text-center text-sm" />
+                              ) : (
+                                worksheetData.sizeSpec.measurements[size]?.shoulderWidth || '-'
+                              )}
                             </td>
                           ))}
                         </tr>
@@ -640,7 +921,11 @@ export default function WorksheetDetailPage() {
                           <td className="py-2 text-foreground">암홀</td>
                           {worksheetData.sizeSpec.sizes.map(size => (
                             <td key={size} className="text-center py-2 text-foreground">
-                              {worksheetData.sizeSpec.measurements[size]?.armhole || '-'}
+                              {isEditMode ? (
+                                <input type="number" value={worksheetData.sizeSpec.measurements[size]?.armhole || 0} onChange={(e) => handleDirectEdit(`sizeSpec.measurements.${size}.armhole`, Number(e.target.value))} className="input w-24 text-center text-sm" />
+                              ) : (
+                                worksheetData.sizeSpec.measurements[size]?.armhole || '-'
+                              )}
                             </td>
                           ))}
                         </tr>
@@ -648,7 +933,11 @@ export default function WorksheetDetailPage() {
                           <td className="py-2 text-foreground">가슴둘레</td>
                           {worksheetData.sizeSpec.sizes.map(size => (
                             <td key={size} className="text-center py-2 text-foreground">
-                              {worksheetData.sizeSpec.measurements[size]?.chestCircumference || '-'}
+                              {isEditMode ? (
+                                <input type="number" value={worksheetData.sizeSpec.measurements[size]?.chestCircumference || 0} onChange={(e) => handleDirectEdit(`sizeSpec.measurements.${size}.chestCircumference`, Number(e.target.value))} className="input w-24 text-center text-sm" />
+                              ) : (
+                                worksheetData.sizeSpec.measurements[size]?.chestCircumference || '-'
+                              )}
                             </td>
                           ))}
                         </tr>
@@ -659,8 +948,13 @@ export default function WorksheetDetailPage() {
 
                 {/* 수량별 색상/사이즈 */}
                 <div className="card">
-                  <div className="mb-4">
+                  <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-semibold text-foreground">수량별 색상/사이즈</h3>
+                    {isEditMode && (
+                      <div className="flex space-x-2">
+                        <Button variant="outline" size="sm" onClick={addColor}>색상 추가</Button>
+                      </div>
+                    )}
                   </div>
                   <div className="overflow-x-auto">
                     <table className="min-w-full text-sm">
@@ -671,32 +965,63 @@ export default function WorksheetDetailPage() {
                             <th key={size} className="text-center py-2 text-muted-foreground">{size}</th>
                           ))}
                           <th className="text-center py-2 text-muted-foreground">합계</th>
+                          {isEditMode && <th className="text-center py-2 text-muted-foreground">삭제</th>}
                         </tr>
                       </thead>
                       <tbody>
                         {worksheetData.quantityByColorSize.colors.map(color => (
                           <tr key={color} className="border-b border-border">
-                            <td className="py-2 text-foreground">{color}</td>
+                            <td className="py-2 text-foreground">
+                              {isEditMode ? (
+                                <input type="text" value={color} onChange={(e) => {
+                                  const newColors = worksheetData.quantityByColorSize.colors.map(c => c === color ? e.target.value : c);
+                                  const newQuantities: any = { ...worksheetData.quantityByColorSize.quantities };
+                                  newQuantities[e.target.value] = newQuantities[color];
+                                  delete newQuantities[color];
+                                  setWorksheetData(prev => ({
+                                    ...prev!,
+                                    quantityByColorSize: { ...prev!.quantityByColorSize, colors: newColors, quantities: newQuantities }
+                                  }));
+                                }} className="input w-28 text-sm" />
+                              ) : color}
+                            </td>
                             {worksheetData.quantityByColorSize.sizes.map(size => (
                               <td key={size} className="text-center py-2 text-foreground">
-                                {worksheetData.quantityByColorSize.quantities[color]?.[size] || 0}
+                                {isEditMode ? (
+                                  <input type="number" value={worksheetData.quantityByColorSize.quantities[color]?.[size] || 0} onChange={(e) => {
+                                    setWorksheetData(prev => ({
+                                      ...prev!,
+                                      quantityByColorSize: {
+                                        ...prev!.quantityByColorSize,
+                                        quantities: {
+                                          ...prev!.quantityByColorSize.quantities,
+                                          [color]: { ...prev!.quantityByColorSize.quantities[color], [size]: Number(e.target.value) }
+                                        }
+                                      }
+                                    }));
+                                  }} className="input w-24 text-center text-sm" />
+                                ) : (
+                                  worksheetData.quantityByColorSize.quantities[color]?.[size] || 0
+                                )}
                               </td>
                             ))}
-                            <td className="text-center py-2 font-medium text-foreground">
-                              {calculateTotalByColor(color)}
-                            </td>
+                            <td className="text-center py-2 font-medium text-foreground">{calculateTotalByColor(color)}</td>
+                            {isEditMode && (
+                              <td className="text-center py-2">
+                                {worksheetData.quantityByColorSize.colors.length > 1 && (
+                                  <button onClick={() => removeColor(color)} className="text-red-500 hover:text-red-700 text-xs">×</button>
+                                )}
+                              </td>
+                            )}
                           </tr>
                         ))}
                         <tr className="border-t border-border bg-muted">
                           <td className="py-2 font-medium text-foreground">합계</td>
                           {worksheetData.quantityByColorSize.sizes.map(size => (
-                            <td key={size} className="text-center py-2 font-medium text-foreground">
-                              {calculateTotalBySize(size)}
-                            </td>
+                            <td key={size} className="text-center py-2 font-medium text-foreground">{calculateTotalBySize(size)}</td>
                           ))}
-                          <td className="text-center py-2 font-bold text-foreground">
-                            {calculateGrandTotal()}
-                          </td>
+                          <td className="text-center py-2 font-bold text-foreground">{calculateGrandTotal()}</td>
+                          {isEditMode && <td></td>}
                         </tr>
                       </tbody>
                     </table>
@@ -705,8 +1030,11 @@ export default function WorksheetDetailPage() {
 
                 {/* 부자재 */}
                 <div className="card">
-                  <div className="mb-4">
+                  <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-semibold text-foreground">부자재</h3>
+                    {isEditMode && (
+                      <Button variant="outline" size="sm" onClick={addSubMaterial}>부자재 추가</Button>
+                    )}
                   </div>
                   <div className="overflow-x-auto">
                     <table className="min-w-full text-sm">
@@ -716,15 +1044,37 @@ export default function WorksheetDetailPage() {
                           <th className="text-left py-2 text-muted-foreground">색상</th>
                           <th className="text-left py-2 text-muted-foreground">규격</th>
                           <th className="text-right py-2 text-muted-foreground">수량</th>
+                          {isEditMode && <th className="text-center py-2 text-muted-foreground">삭제</th>}
                         </tr>
                       </thead>
                       <tbody>
                         {worksheetData.subMaterials.map((material, index) => (
                           <tr key={index} className="border-b border-border">
-                            <td className="py-2 text-foreground">{material.name}</td>
-                            <td className="py-2 text-foreground">{material.color}</td>
-                            <td className="py-2 text-foreground">{material.specification}</td>
-                            <td className="text-right py-2 text-foreground">{material.quantity}</td>
+                            <td className="py-2 text-foreground">
+                              {isEditMode ? (
+                                <input type="text" value={material.name} onChange={(e) => updateSubMaterial(index, 'name', e.target.value)} className="input w-full text-sm" />
+                              ) : material.name}
+                            </td>
+                            <td className="py-2 text-foreground">
+                              {isEditMode ? (
+                                <input type="text" value={material.color} onChange={(e) => updateSubMaterial(index, 'color', e.target.value)} className="input w-full text-sm" />
+                              ) : material.color}
+                            </td>
+                            <td className="py-2 text-foreground">
+                              {isEditMode ? (
+                                <input type="text" value={material.specification} onChange={(e) => updateSubMaterial(index, 'specification', e.target.value)} className="input w-full text-sm" />
+                              ) : material.specification}
+                            </td>
+                            <td className="text-right py-2 text-foreground">
+                              {isEditMode ? (
+                                <input type="number" value={material.quantity} onChange={(e) => updateSubMaterial(index, 'quantity', Number(e.target.value))} className="input w-20 text-right text-sm" />
+                              ) : material.quantity}
+                            </td>
+                            {isEditMode && (
+                              <td className="text-center py-2">
+                                <button onClick={() => removeSubMaterial(index)} className="text-red-500 hover:text-red-700 text-xs">×</button>
+                              </td>
+                            )}
                           </tr>
                         ))}
                       </tbody>
@@ -734,8 +1084,11 @@ export default function WorksheetDetailPage() {
 
                 {/* 원단 정보 */}
                 <div className="card">
-                  <div className="mb-4">
+                  <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-semibold text-foreground">원단 정보</h3>
+                    {isEditMode && (
+                      <Button variant="outline" size="sm" onClick={addFabricInfo}>원단 추가</Button>
+                    )}
                   </div>
                   <div className="overflow-x-auto">
                     <table className="min-w-full text-sm">
@@ -747,17 +1100,23 @@ export default function WorksheetDetailPage() {
                           <th className="text-left py-2 text-muted-foreground">사이즈/단가</th>
                           <th className="text-left py-2 text-muted-foreground">혼용률</th>
                           <th className="text-left py-2 text-muted-foreground">요척</th>
+                          {isEditMode && <th className="text-center py-2 text-muted-foreground">삭제</th>}
                         </tr>
                       </thead>
                       <tbody>
                         {worksheetData.fabricInfo.map((info, index) => (
                           <tr key={index} className="border-b border-border">
-                            <td className="py-2 text-foreground">{info.location}</td>
-                            <td className="py-2 text-foreground">{info.companyItem}</td>
-                            <td className="py-2 text-foreground">{info.color}</td>
-                            <td className="py-2 text-foreground">{info.sizeUnitPrice}</td>
-                            <td className="py-2 text-foreground">{info.composition}</td>
-                            <td className="py-2 text-foreground">{info.yield}</td>
+                            <td className="py-2 text-foreground">{isEditMode ? (<input type="text" value={info.location} onChange={(e) => updateFabricInfo(index, 'location', e.target.value)} className="input w-full text-sm" />) : info.location}</td>
+                            <td className="py-2 text-foreground">{isEditMode ? (<input type="text" value={info.companyItem} onChange={(e) => updateFabricInfo(index, 'companyItem', e.target.value)} className="input w-full text-sm" />) : info.companyItem}</td>
+                            <td className="py-2 text-foreground">{isEditMode ? (<input type="text" value={info.color} onChange={(e) => updateFabricInfo(index, 'color', e.target.value)} className="input w-full text-sm" />) : info.color}</td>
+                            <td className="py-2 text-foreground">{isEditMode ? (<input type="text" value={info.sizeUnitPrice} onChange={(e) => updateFabricInfo(index, 'sizeUnitPrice', e.target.value)} className="input w-full text-sm" />) : info.sizeUnitPrice}</td>
+                            <td className="py-2 text-foreground">{isEditMode ? (<input type="text" value={info.composition} onChange={(e) => updateFabricInfo(index, 'composition', e.target.value)} className="input w-full text-sm" />) : info.composition}</td>
+                            <td className="py-2 text-foreground">{isEditMode ? (<input type="text" value={info.yield} onChange={(e) => updateFabricInfo(index, 'yield', e.target.value)} className="input w-full text-sm" />) : info.yield}</td>
+                            {isEditMode && (
+                              <td className="text-center py-2">
+                                <button onClick={() => removeFabricInfo(index)} className="text-red-500 hover:text-red-700 text-xs">×</button>
+                              </td>
+                            )}
                           </tr>
                         ))}
                       </tbody>

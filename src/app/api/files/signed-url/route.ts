@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
 
 // 구매자에게만 제공되는 서명 URL 발급 API
 // body: { path: string, bucket?: string, userId: string }
@@ -12,6 +11,13 @@ export async function POST(request: NextRequest) {
       console.log('필수 파라미터 누락:', { path, userId });
       return NextResponse.json({ error: 'Invalid params' }, { status: 400 });
     }
+
+    // 동적 로드
+    let supabase: any = null;
+    try {
+      const mod = await import('@/lib/supabase');
+      supabase = (mod as any).supabase || null;
+    } catch {}
 
     if (!supabase) {
       console.log('Supabase 클라이언트가 null입니다. 데모 URL 반환');

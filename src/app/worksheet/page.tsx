@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { Header } from "@/components/layout/header";
+import dynamic from "next/dynamic";
+const BrandLoader = dynamic(() => import("@/components/ui/brand-loader").then(m => m.BrandLoader), { ssr: false });
 import { Button } from "@/components/ui/button";
 import { FileUpload } from "@/components/ui/file-upload";
 import { PDFDownload } from "@/components/ui/pdf-download";
@@ -525,7 +527,8 @@ export default function WorksheetPage() {
         },
         body: JSON.stringify({
           worksheetData,
-          userId: user.id
+          userId: user.id,
+          forceCreate: true
         }),
       });
 
@@ -534,6 +537,29 @@ export default function WorksheetPage() {
       if (data.success) {
         setSaveMessage(data.message);
         setLastSavedAt(new Date().toISOString());
+        // 데모 모드 반영: 로컬 스토리지에 추가 저장하여 마이페이지 탭에 노출
+        try {
+          const localKey = 'demo_worksheets';
+          const prevJson = typeof window !== 'undefined' ? window.localStorage.getItem(localKey) : null;
+          const prev = prevJson ? JSON.parse(prevJson) : [];
+          const sizeRange = Array.isArray(worksheetData?.sizeSpec?.sizes)
+            ? `${worksheetData.sizeSpec.sizes[0]}~${worksheetData.sizeSpec.sizes[worksheetData.sizeSpec.sizes.length - 1]}`
+            : 'S~XL';
+          const newItem = {
+            id: Number(data.id) || Date.now(),
+            user_id: user.id,
+            title: worksheetData.title || '작업지시서',
+            category: worksheetData.category || '기타',
+            size_range: sizeRange,
+            content: worksheetData,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          };
+          const merged = [newItem, ...prev.filter((w: any) => w.id !== newItem.id)];
+          if (typeof window !== 'undefined') {
+            window.localStorage.setItem(localKey, JSON.stringify(merged));
+          }
+        } catch {}
         // 3초 후 메시지 숨기기
         setTimeout(() => setSaveMessage(null), 3000);
       } else {
@@ -546,6 +572,21 @@ export default function WorksheetPage() {
       setIsSaving(false);
     }
   };
+
+  // 새로 만들기 템플릿 진입 처리
+  useEffect(() => {
+    try {
+      if (!worksheetData && typeof window !== 'undefined') {
+        const raw = window.localStorage.getItem('worksheet_new_template');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          // 일회성 사용 후 제거
+          window.localStorage.removeItem('worksheet_new_template');
+          setWorksheetData(parsed);
+        }
+      }
+    } catch {}
+  }, [worksheetData]);
 
   if (!user) {
     return (
@@ -646,23 +687,28 @@ export default function WorksheetPage() {
                   </div>
                 )}
 
-                <Button
-                  onClick={handleGenerateWorksheet}
-                  disabled={!uploadedFile || isGenerating}
-                  className="w-full bg-primary hover:bg-primary/90 text-white"
-                >
-                  {isGenerating ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      작업지시서 생성 중...
-                    </>
-                  ) : (
+                {!isGenerating ? (
+                  <Button
+                    onClick={async () => {
+                      const start = Date.now();
+                      setIsGenerating(true);
+                      await handleGenerateWorksheet();
+                      const elapsed = Date.now() - start;
+                      const remain = 2000 - elapsed; // 최소 2초 보장
+                      if (remain > 0) await new Promise(r => setTimeout(r, remain));
+                      setIsGenerating(false);
+                    }}
+                    disabled={!uploadedFile}
+                    className="w-full bg-primary hover:bg-primary/90 text-white"
+                  >
                     <>
                       <FileText className="w-4 h-4 mr-2" />
                       작업지시서 생성하기
                     </>
-                  )}
-                </Button>
+                  </Button>
+                ) : (
+                  <BrandLoader />
+                )}
               </div>
             </div>
           </div>

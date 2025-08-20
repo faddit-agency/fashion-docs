@@ -47,12 +47,7 @@ export default function Home() {
                 작업지시서 만들기
                 <Sparkles className="w-5 h-5" />
               </Link>
-            <Link
-              href="/drive"
-              className="btn-secondary inline-flex items-center gap-2 px-8 py-4 text-lg font-semibold"
-            >
-              드라이브
-            </Link>
+            {/* 드라이브 버튼 제거: 드라이브는 마이페이지에서만 접근 */}
             </div>
           </div>
         </div>

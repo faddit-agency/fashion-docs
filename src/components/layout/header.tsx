@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useUser, SignOutButton } from "@clerk/nextjs";
 import { Menu, X, Sun, Moon } from "lucide-react";
@@ -14,6 +15,12 @@ export function Header() {
   const { cartCount } = useCart(user?.id);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
+  const pathname = usePathname();
+
+  const isActive = (href: string) => {
+    if (href === "/") return pathname === "/";
+    return pathname.startsWith(href);
+  };
 
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">
@@ -35,19 +42,19 @@ export function Header() {
             <nav className="hidden md:flex items-center space-x-8">
               <Link 
                 href="/" 
-                className="text-foreground hover:text-primary font-medium transition-colors duration-200 hover-lift"
+                className={`${isActive("/") ? "text-foreground" : "text-muted-foreground"} hover:text-foreground font-medium transition-colors duration-200 hover-lift`}
               >
                 홈
               </Link>
               <Link 
                 href="/products" 
-                className="text-muted-foreground hover:text-foreground font-medium transition-colors duration-200 hover-lift"
+                className={`${isActive("/products") ? "text-foreground" : "text-muted-foreground"} hover:text-foreground font-medium transition-colors duration-200 hover-lift`}
               >
                 도식화 & 패턴
               </Link>
               <Link 
                 href="/worksheet" 
-                className="text-muted-foreground hover:text-foreground font-medium transition-colors duration-200 hover-lift"
+                className={`${isActive("/worksheet") ? "text-foreground" : "text-muted-foreground"} hover:text-foreground font-medium transition-colors duration-200 hover-lift`}
               >
                 작업지시서
               </Link>
@@ -130,21 +137,21 @@ export function Header() {
             <nav className="flex flex-col space-y-4">
               <Link 
                 href="/" 
-                className="text-foreground hover:text-primary font-medium transition-colors duration-200"
+                className={`${isActive("/") ? "text-foreground" : "text-muted-foreground"} hover:text-foreground font-medium transition-colors duration-200`}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 홈
               </Link>
               <Link 
                 href="/products" 
-                className="text-muted-foreground hover:text-foreground font-medium transition-colors duration-200"
+                className={`${isActive("/products") ? "text-foreground" : "text-muted-foreground"} hover:text-foreground font-medium transition-colors duration-200`}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 도식화 & 패턴
               </Link>
               <Link 
                 href="/worksheet" 
-                className="text-muted-foreground hover:text-foreground font-medium transition-colors duration-200"
+                className={`${isActive("/worksheet") ? "text-foreground" : "text-muted-foreground"} hover:text-foreground font-medium transition-colors duration-200`}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 작업지시서

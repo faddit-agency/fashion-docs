@@ -45,7 +45,7 @@ export function ShareButtons({
     <div className="flex items-center space-x-4">
       <button
         onClick={handleShare}
-        className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 transition-colors"
+        className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors"
       >
         <Share2 className="w-4 h-4" />
         <span className="text-sm">공유</span>
@@ -53,7 +53,7 @@ export function ShareButtons({
       
       <button
         onClick={handleCopyLink}
-        className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 transition-colors"
+        className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors"
       >
         <Copy className="w-4 h-4" />
         <span className="text-sm">
@@ -65,8 +65,8 @@ export function ShareButtons({
         onClick={onWishlist}
         className={`flex items-center space-x-2 transition-colors ${
           isWishlisted 
-            ? 'text-gray-900 hover:text-gray-700' 
-            : 'text-gray-600 hover:text-gray-800'
+            ? 'text-foreground hover:text-foreground/80' 
+            : 'text-muted-foreground hover:text-foreground'
         }`}
       >
         <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-current' : ''}`} />

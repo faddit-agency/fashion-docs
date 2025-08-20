@@ -253,25 +253,30 @@ export const cartAPI = {
       return [];
     }
 
-    const { data, error } = await supabase
-      .from('cart_items')
-      .select(`
-        *,
-        products (
-          id,
-          name,
-          price,
-          image_urls
-        )
-      `)
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
-    
-    if (error) {
-      console.warn('장바구니 조회 실패:', error);
+    try {
+      const { data, error } = await supabase
+        .from('cart_items')
+        .select(`
+          *,
+          products (
+            id,
+            name,
+            price,
+            image_urls
+          )
+        `)
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.warn('장바구니 조회 실패:', error);
+        return [];
+      }
+      return data || [];
+    } catch (err) {
+      console.error('장바구니 조회 중 오류:', err);
       return [];
     }
-    return data;
   },
 
   // 장바구니에 상품 추가
@@ -281,45 +286,55 @@ export const cartAPI = {
       return null;
     }
 
-    // 기존 장바구니 아이템 확인
-    const { data: existingItem } = await supabase
-      .from('cart_items')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('product_id', productId)
-      .single();
+    try {
+      // 기존 장바구니 아이템 확인
+      const { data: existingItem, error: selectError } = await supabase
+        .from('cart_items')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('product_id', productId)
+        .maybeSingle();
 
-    if (existingItem) {
-      // 수량 업데이트
-      const { data, error } = await supabase
-        .from('cart_items')
-        .update({ quantity: existingItem.quantity + quantity })
-        .eq('id', existingItem.id)
-        .select()
-        .single();
-      
-      if (error) {
-        console.warn('장바구니 수량 업데이트 실패:', error);
+      if (selectError) {
+        console.warn('장바구니 조회 실패:', selectError);
         return null;
       }
-      return data;
-    } else {
-      // 새 아이템 추가
-      const { data, error } = await supabase
-        .from('cart_items')
-        .insert({
-          user_id: userId,
-          product_id: productId,
-          quantity
-        })
-        .select()
-        .single();
-      
-      if (error) {
-        console.warn('장바구니 추가 실패:', error);
-        return null;
+
+      if (existingItem) {
+        // 수량 업데이트
+        const { data, error } = await supabase
+          .from('cart_items')
+          .update({ quantity: existingItem.quantity + quantity })
+          .eq('id', existingItem.id)
+          .select()
+          .single();
+        
+        if (error) {
+          console.warn('장바구니 수량 업데이트 실패:', error);
+          return null;
+        }
+        return data;
+      } else {
+        // 새 아이템 추가
+        const { data, error } = await supabase
+          .from('cart_items')
+          .insert({
+            user_id: userId,
+            product_id: productId,
+            quantity
+          })
+          .select()
+          .single();
+        
+        if (error) {
+          console.warn('장바구니 추가 실패:', error);
+          return null;
+        }
+        return data;
       }
-      return data;
+    } catch (err) {
+      console.error('장바구니 추가 중 오류:', err);
+      return null;
     }
   },
 
@@ -389,16 +404,21 @@ export const cartAPI = {
       return 0;
     }
 
-    const { count, error } = await supabase
-      .from('cart_items')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId);
-    
-    if (error) {
-      console.warn('장바구니 개수 조회 실패:', error);
+    try {
+      const { count, error } = await supabase
+        .from('cart_items')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId);
+      
+      if (error) {
+        console.warn('장바구니 개수 조회 실패:', error);
+        return 0;
+      }
+      return count || 0;
+    } catch (err) {
+      console.error('장바구니 개수 조회 중 오류:', err);
       return 0;
     }
-    return count || 0;
   }
 };
 

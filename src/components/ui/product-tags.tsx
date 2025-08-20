@@ -10,7 +10,7 @@ export function ProductTags({ tags, onTagClick }: ProductTagsProps) {
         <button
           key={index}
           onClick={() => onTagClick?.(tag)}
-          className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full hover:bg-gray-200 transition-colors"
+          className="px-3 py-1 bg-muted text-foreground text-sm rounded-full hover:bg-muted/80 transition-colors"
         >
           #{tag}
         </button>
