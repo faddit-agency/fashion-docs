@@ -67,7 +67,7 @@ export default function DrivePage() {
           { id: "3", name: "라벨 가이드", path: "assets/labels/guide.pdf", category: "라벨", uploadedAt: new Date().toISOString(), fileType: "pdf" },
         ];
         
-        setAssets([...defaultAssets, ...localAssets]);
+        setAssets([...defaultAssets, ...localAssets] as Asset[]);
               } finally {
           setLoading(false);
         }
