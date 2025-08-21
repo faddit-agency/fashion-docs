@@ -14,6 +14,7 @@ import Link from "next/link";
 import { Download, Edit, FileText, Trash2, Plus, Minus, ShoppingCart, X, Save, User } from "lucide-react";
 import { FileUpload } from "@/components/ui/file-upload";
 import { FileDownload } from "@/components/ui/file-download";
+import { getWorksheetThumbnail, deleteWorksheetThumbnail } from "@/components/ui/worksheet-thumbnail";
 
 
 // 타입 정의
@@ -369,6 +370,12 @@ function MyPageContent() {
         return;
       }
       
+      // 디버깅: localStorage 썸네일 데이터 확인
+      const thumbnails = JSON.parse(localStorage.getItem('worksheet_thumbnails') || '{}');
+      console.log('전체 localStorage 썸네일 데이터:', thumbnails);
+      console.log('저장된 썸네일 개수:', Object.keys(thumbnails).length);
+      console.log('저장된 썸네일 키들:', Object.keys(thumbnails));
+      
       // 구매 내역, 작업지시서, 장바구니를 병렬로 로드
       const [purchasesData, worksheetsData, cartData] = await Promise.all([
         purchaseAPI.getUserPurchases(userId),
@@ -505,6 +512,23 @@ function MyPageContent() {
     try {
       await worksheetAPI.deleteWorksheet(worksheetId);
       setWorksheets(prev => prev.filter(w => w.id !== worksheetId));
+      
+      // 썸네일도 함께 삭제
+      deleteWorksheetThumbnail(worksheetId.toString());
+      
+      // localStorage의 demo_worksheets에서도 삭제
+      try {
+        const localKey = 'demo_worksheets';
+        const raw = typeof window !== 'undefined' ? window.localStorage.getItem(localKey) : null;
+        if (raw) {
+          const localWorksheets = JSON.parse(raw);
+          const filteredWorksheets = localWorksheets.filter((w: any) => w.id !== worksheetId);
+          window.localStorage.setItem(localKey, JSON.stringify(filteredWorksheets));
+        }
+      } catch (localError) {
+        console.error("로컬 스토리지 삭제 오류:", localError);
+      }
+      
       alert("작업지시서가 삭제되었습니다.");
     } catch {
       if (process.env.NODE_ENV === 'development') {
@@ -720,7 +744,23 @@ function MyPageContent() {
                         <div className="text-sm font-medium text-gray-900 truncate" title={a.name}>{a.name}</div>
                         <div className="text-xs text-gray-500 truncate" title={a.path}>{a.path}</div>
                       </div>
-                      <FileDownload filePath={a.path} size="sm" />
+                      <div className="flex items-center gap-2">
+                        <FileDownload filePath={a.path} size="sm" />
+                        <button
+                          onClick={() => {
+                            if (confirm('정말로 이 파일을 삭제하시겠습니까?')) {
+                              // 삭제 로직 구현
+                              setAssets(prev => prev.filter(asset => asset.id !== a.id));
+                            }
+                          }}
+                          className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
+                          title="삭제"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
                     <div className="text-xs text-gray-400 mt-2">{a.category || '기타'} • {new Date(a.uploadedAt || a.uploaded_at || a.created_at || Date.now()).toLocaleDateString()}</div>
                   </div>
@@ -1084,32 +1124,116 @@ function MyPageContent() {
                     </Button>
                   </div>
                   {worksheets.length > 0 ? (
-                    <div className="space-y-4">
-                      {worksheets.slice(0, 3).map((worksheet, idx) => (
-                        <div key={`recent-ws-${worksheet.id}-${worksheet.updated_at || worksheet.created_at || idx}`} className="border border-border rounded-lg p-4">
-                          <div className="flex justify-between items-start mb-2">
-                            <h3 className="font-medium text-foreground text-sm">{worksheet.title}</h3>
-                            <span className="text-xs text-primary font-medium">{worksheet.category}</span>
+                    <div className="space-y-3">
+                      {worksheets.slice(0, 5).map((worksheet, idx) => {
+                        // 작업지시서 미리보기 썸네일 생성
+                        const generateThumbnail = (worksheet: any) => {
+                          console.log('썸네일 생성 시작:', worksheet.id, worksheet.title);
+                          
+                          // 1. 캡처된 썸네일이 있으면 우선 사용
+                          const savedThumbnail = getWorksheetThumbnail(worksheet.id.toString());
+                          console.log('저장된 썸네일 확인:', worksheet.id, savedThumbnail ? '있음' : '없음');
+                          
+                          if (savedThumbnail) {
+                            console.log('캡처된 썸네일 사용:', worksheet.id, '썸네일 길이:', savedThumbnail.length);
+                            console.log('썸네일 미리보기:', savedThumbnail.substring(0, 100) + '...');
+                            return savedThumbnail;
+                          }
+                          
+                          // 2. 작업지시서 내용에서 도식화 이미지 확인
+                          const content = worksheet.content;
+                          const frontImage = content?.technicalDrawing?.frontImage || '';
+                          
+                          // 도식화 이미지가 있고 placeholder가 아니면 사용
+                          if (frontImage && !frontImage.includes('placeholder')) {
+                            console.log('도식화 이미지 사용:', worksheet.id);
+                            return frontImage;
+                          }
+                          
+                          console.log('기본 썸네일 생성:', worksheet.id);
+                          
+                          // 3. 기본 썸네일 생성 (SVG) - 더 연하게 표시
+                          const categoryColors: Record<string, string> = {
+                            '상의': '#e3f2fd',
+                            '하의': '#e8f5e8',
+                            '원피스': '#f3e5f5',
+                            '아우터': '#fff3e0',
+                            '속옷': '#fce4ec',
+                            '액세서리': '#fff8e1'
+                          };
+
+                          return `data:image/svg+xml,${encodeURIComponent(`
+                            <svg width="200" height="150" xmlns="http://www.w3.org/2000/svg">
+                              <rect width="100%" height="100%" fill="${categoryColors[worksheet.category] || '#f5f5f5'}"/>
+                              <text x="50%" y="35%" font-family="Arial, sans-serif" font-size="12" fill="#666666" text-anchor="middle" font-weight="normal">${worksheet.title}</text>
+                              <text x="50%" y="55%" font-family="Arial, sans-serif" font-size="10" fill="#999999" text-anchor="middle">${worksheet.category}</text>
+                              <text x="50%" y="75%" font-family="Arial, sans-serif" font-size="8" fill="#cccccc" text-anchor="middle">작업지시서</text>
+                              <text x="50%" y="90%" font-family="Arial, sans-serif" font-size="6" fill="#dddddd" text-anchor="middle">${worksheet.size_range}</text>
+                            </svg>
+                          `)}`;
+                        };
+
+                        return (
+                          <div key={`recent-ws-${worksheet.id}-${worksheet.updated_at || worksheet.created_at || idx}`} 
+                               className="flex items-center gap-4 p-4 bg-white border border-gray-200 rounded-lg hover:shadow-md transition-shadow duration-200">
+                            {/* 썸네일 이미지 */}
+                            <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center">
+                              <img
+                                src={generateThumbnail(worksheet)}
+                                alt={worksheet.title}
+                                className="w-full h-full object-contain bg-white"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.style.display = 'none';
+                                  const nextElement = target.nextElementSibling as HTMLElement;
+                                  if (nextElement) {
+                                    nextElement.style.display = 'flex';
+                                  }
+                                }}
+                                onLoad={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.style.display = 'block';
+                                  const nextElement = target.nextElementSibling as HTMLElement;
+                                  if (nextElement) {
+                                    nextElement.style.display = 'none';
+                                  }
+                                }}
+                              />
+                              <div className="w-full h-full bg-gray-100 flex items-center justify-center" style={{display: 'none'}}>
+                                <FileText className="w-6 h-6 text-gray-400" />
+                              </div>
+                            </div>
+                            
+                            {/* 작업지시서 정보 */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h3 className="font-medium text-gray-900 truncate">{worksheet.title}</h3>
+                                <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full font-medium">
+                                  {worksheet.category}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-4 text-sm text-gray-500">
+                                <span>사이즈: {worksheet.size_range}</span>
+                                <span>•</span>
+                                <span>수정: {formatDate(new Date(worksheet.updated_at))}</span>
+                              </div>
+                            </div>
+                            
+
                           </div>
-                          <div className="flex items-center flex-wrap gap-2 text-xs text-muted-foreground">
-                            <span>생성: {formatDate(new Date(worksheet.created_at))}</span>
-                            <span>•</span>
-                            <span>수정: {formatDate(new Date(worksheet.updated_at))}</span>
-                            <span>•</span>
-                            <span>사이즈: {worksheet.size_range}</span>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   ) : (
                     <div className="text-center py-8">
-                      <div className="text-muted-foreground mb-4">
-                        <svg className="mx-auto h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <div className="text-gray-400 mb-4">
+                        <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                       </div>
-                      <h3 className="text-sm font-medium text-foreground mb-2">작업지시서가 없습니다</h3>
-                      <Button asChild size="sm" className="bg-primary hover:bg-primary/90">
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">작업지시서가 없습니다</h3>
+                      <p className="text-gray-600 mb-4">첫 번째 작업지시서를 만들어보세요!</p>
+                      <Button asChild className="bg-primary hover:bg-primary/90">
                         <Link href="/worksheet">작업지시서 만들기</Link>
                       </Button>
                     </div>
@@ -1248,6 +1372,7 @@ function MyPageContent() {
                       <option value="속옷">속옷</option>
                       <option value="액세서리">액세서리</option>
                     </select>
+
                     <Button size="sm" asChild className="bg-primary hover:bg-primary/90">
                       <Link href="/worksheet" className="inline-flex items-center gap-2 min-w-[110px] justify-center">
                         <Plus className="w-4 h-4" />
@@ -1257,51 +1382,137 @@ function MyPageContent() {
                   </div>
                 </div>
                 {worksheets.length > 0 ? (
-                  <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                     {worksheets
                       .filter(worksheet => worksheetFilter === 'all' || worksheet.category === worksheetFilter)
-                      .map((worksheet, idx) => (
-                      <div key={`ws-${worksheet.id}-${worksheet.updated_at || worksheet.created_at || idx}`} className="border border-gray-200 rounded-lg p-4">
-                        <div className="flex justify-between items-start mb-2">
-                          <h3 className="font-medium text-gray-900">{worksheet.title}</h3>
-                          <span className="text-sm text-primary font-medium">{worksheet.category}</span>
-                        </div>
-                        <div className="flex items-center flex-wrap gap-2 text-sm text-gray-600 mb-3">
-                          <span>생성: {formatDate(new Date(worksheet.created_at))}</span>
-                          <span>•</span>
-                          <span>수정: {formatDate(new Date(worksheet.updated_at))}</span>
-                          <span>•</span>
-                          <span>사이즈: {worksheet.size_range}</span>
-                        </div>
-                        <div className="flex space-x-2">
-                          <Button variant="outline" size="sm" asChild>
-                            <Link href={`/worksheet/${worksheet.id}`} className="inline-flex items-center gap-2 min-w-[80px] justify-center">
-                              <Edit className="w-4 h-4" />
-                              편집
-                            </Link>
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            <FileText className="w-4 h-4 mr-1" />
-                            PDF 다운로드
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="bg-green-600 text-white hover:bg-green-700"
-                          >
-                            생산 의뢰
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => handleDeleteWorksheet(worksheet.id)}
-                            className="text-red-600 border-red-200 hover:bg-red-50"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
+                      .map((worksheet, idx) => {
+                                                // 작업지시서 미리보기 썸네일 생성
+                        const generateThumbnail = (worksheet: any) => {
+                          console.log('썸네일 생성 시작:', worksheet.id, worksheet.title);
+                          
+                          // 1. 캡처된 썸네일이 있으면 우선 사용
+                          const savedThumbnail = getWorksheetThumbnail(worksheet.id.toString());
+                          console.log('저장된 썸네일 확인:', worksheet.id, savedThumbnail ? '있음' : '없음');
+                          
+                          if (savedThumbnail) {
+                            console.log('캡처된 썸네일 사용:', worksheet.id, '썸네일 길이:', savedThumbnail.length);
+                            console.log('썸네일 미리보기:', savedThumbnail.substring(0, 100) + '...');
+                            return savedThumbnail;
+                          }
+                          
+                          // 2. 작업지시서 내용에서 도식화 이미지 확인
+                          const content = worksheet.content;
+                          const frontImage = content?.technicalDrawing?.frontImage || '';
+                          
+                          // 도식화 이미지가 있고 placeholder가 아니면 사용
+                          if (frontImage && !frontImage.includes('placeholder')) {
+                            console.log('도식화 이미지 사용:', worksheet.id);
+                            return frontImage;
+                          }
+                          
+                          console.log('기본 썸네일 생성:', worksheet.id);
+                          
+                          // 3. 기본 썸네일 생성 (SVG) - 더 연하게 표시
+                          const categoryColors: Record<string, string> = {
+                            '상의': '#e3f2fd',
+                            '하의': '#e8f5e8',
+                            '원피스': '#f3e5f5',
+                            '아우터': '#fff3e0',
+                            '속옷': '#fce4ec',
+                            '액세서리': '#fff8e1'
+                          };
+
+                          return `data:image/svg+xml,${encodeURIComponent(`
+                            <svg width="200" height="150" xmlns="http://www.w3.org/2000/svg">
+                              <rect width="100%" height="100%" fill="${categoryColors[worksheet.category] || '#f5f5f5'}"/>
+                              <text x="50%" y="35%" font-family="Arial, sans-serif" font-size="12" fill="#666666" text-anchor="middle" font-weight="normal">${worksheet.title}</text>
+                              <text x="50%" y="55%" font-family="Arial, sans-serif" font-size="10" fill="#999999" text-anchor="middle">${worksheet.category}</text>
+                              <text x="50%" y="75%" font-family="Arial, sans-serif" font-size="8" fill="#cccccc" text-anchor="middle">작업지시서</text>
+                              <text x="50%" y="90%" font-family="Arial, sans-serif" font-size="6" fill="#dddddd" text-anchor="middle">${worksheet.size_range}</text>
+                            </svg>
+                          `)}`;
+                        };
+
+                        return (
+                          <div key={`ws-${worksheet.id}-${worksheet.updated_at || worksheet.created_at || idx}`} 
+                               className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-200 min-h-[280px]">
+                            {/* 썸네일 이미지 */}
+                            <div className="aspect-[5/4] bg-gray-100 relative flex items-center justify-center">
+                              <img
+                                src={generateThumbnail(worksheet)}
+                                alt={worksheet.title}
+                                className="max-w-full max-h-full object-contain bg-white"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  console.log('이미지 로드 실패:', worksheet.id, 'src:', target.src.substring(0, 100) + '...');
+                                  target.style.display = 'none';
+                                  const nextElement = target.nextElementSibling as HTMLElement;
+                                  if (nextElement) {
+                                    nextElement.style.display = 'flex';
+                                  }
+                                }}
+                                onLoad={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  console.log('이미지 로드 성공:', worksheet.id, '이미지 크기:', target.naturalWidth, 'x', target.naturalHeight, 'src 타입:', target.src.substring(0, 30));
+                                  target.style.display = 'block';
+                                  const nextElement = target.nextElementSibling as HTMLElement;
+                                  if (nextElement) {
+                                    nextElement.style.display = 'none';
+                                  }
+                                }}
+                              />
+                              <div className="absolute inset-0 bg-gray-100 flex items-center justify-center" style={{display: 'none'}}>
+                                <div className="text-center">
+                                  <FileText className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                                  <p className="text-sm text-gray-500">{worksheet.title}</p>
+                                </div>
+                              </div>
+                              
+
+                            </div>
+                            
+                            {/* 카드 내용 */}
+                            <div className="p-4">
+                              <h3 className="font-semibold text-gray-900 mb-2 line-clamp-1">{worksheet.title}</h3>
+                              
+                              <div className="flex items-center gap-2 text-xs text-gray-500 mb-3">
+                                <span>생성: {formatDate(new Date(worksheet.created_at))}</span>
+                                <span>•</span>
+                                <span>사이즈: {worksheet.size_range}</span>
+                              </div>
+                              
+                              {/* 액션 버튼들 */}
+                              <div className="flex flex-wrap gap-2">
+                                <Button variant="outline" size="sm" asChild className="flex-1">
+                                  <Link href={`/worksheet/${worksheet.id}`} className="inline-flex items-center gap-1 justify-center">
+                                    <Edit className="w-3 h-3" />
+                                    편집
+                                  </Link>
+                                </Button>
+                                <Button variant="outline" size="sm" className="flex-1">
+                                  <FileText className="w-3 h-3 mr-1" />
+                                  PDF
+                                </Button>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="bg-green-600 text-white hover:bg-green-700 flex-1"
+                                >
+                                  생산 의뢰
+                                </Button>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => handleDeleteWorksheet(worksheet.id)}
+                                  className="text-red-600 border-red-200 hover:bg-red-50"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                   </div>
                 ) : (
                   <div className="text-center py-8">

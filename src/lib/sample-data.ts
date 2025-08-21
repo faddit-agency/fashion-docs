@@ -1,5 +1,30 @@
 import { Product } from './supabase';
 
+// 프로모션 상품 (42개 패키지)
+export const promotionProduct: Product = {
+  id: 999,
+  name: "🎉 프로모션 패키지 - 42개 패턴/도식화 세트",
+  category: "패키지",
+  gender: "공용",
+  season: "사계절",
+  price: 150000, // 프로모션 가격
+  original_price: 300000, // 원래 가격
+  description: "패션 디자이너를 위한 올인원 패키지! 42개의 고품질 패턴과 도식화를 특별 가격으로 제공합니다. 남성/여성 의류, 액세서리까지 다양한 카테고리의 패턴을 포함하여 즉시 활용 가능합니다.",
+  seller_id: "faddit",
+  file_url: "/files/promotion-package.zip",
+  image_urls: [
+    "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&h=1000&fit=crop",
+    "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=1000&fit=crop",
+    "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=1000&fit=crop"
+  ],
+  status: "active",
+  is_promotion: true,
+  promotion_code: "FADDIT2025",
+  items_count: 42,
+  created_at: "2024-01-01T00:00:00Z",
+  updated_at: "2024-01-01T00:00:00Z"
+};
+
 export const sampleProducts: Product[] = [
   {
     id: 1,
@@ -122,5 +147,53 @@ export const getSampleProduct = (id: number): Product | null => {
 };
 
 export const getSampleProducts = (): Product[] => {
-  return sampleProducts;
-}; 
+  return [promotionProduct, ...sampleProducts];
+};
+
+// 프로모션 패키지의 42개 아이템 생성
+export const generatePromotionAssets = (): Asset[] => {
+  const assets: Asset[] = [];
+  const categories: Asset["category"][] = ["패턴", "도식화", "인쇄", "원단", "라벨"];
+  const genders = ["남성", "여성", "공용"];
+  const seasons = ["봄/여름", "가을/겨울", "사계절"];
+  
+  for (let i = 1; i <= 42; i++) {
+    const category = categories[Math.floor(Math.random() * categories.length)];
+    const gender = genders[Math.floor(Math.random() * genders.length)];
+    const season = seasons[Math.floor(Math.random() * seasons.length)];
+    
+    assets.push({
+      id: `promo_${i}`,
+      name: `프로모션 ${category} ${i}`,
+      path: `promotion/package/${category.toLowerCase()}_${i}`,
+      category,
+      uploadedAt: new Date().toISOString(),
+      fileType: category === "패턴" ? "dxf" : "pdf",
+      metadata: {
+        gender,
+        season,
+        isPromotion: true,
+        promotionPackage: "FADDIT2025"
+      }
+    });
+  }
+  
+  return assets;
+};
+
+// Asset 타입 정의
+export interface Asset {
+  id: string;
+  name: string;
+  path: string;
+  category: "패턴" | "도식화" | "인쇄" | "원단" | "라벨" | "기타";
+  uploadedAt: string;
+  fileSize?: string;
+  fileType?: string;
+  metadata?: {
+    gender?: string;
+    season?: string;
+    isPromotion?: boolean;
+    promotionPackage?: string;
+  };
+} 

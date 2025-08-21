@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import { worksheetAPI } from "@/lib/database";
 import { Worksheet } from "@/lib/supabase";
 import Link from "next/link";
-import { ArrowLeft, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, Save, Trash2, Camera } from "lucide-react";
 
 export default function EditWorksheetPage() {
   const params = useParams();
@@ -15,7 +15,9 @@ export default function EditWorksheetPage() {
   const [worksheet, setWorksheet] = useState<Worksheet | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [isCapturing, setIsCapturing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const worksheetRef = useRef<HTMLDivElement>(null);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -23,6 +25,61 @@ export default function EditWorksheetPage() {
     size_range: "",
     content: ""
   });
+
+  // 썸네일 캡처 함수
+  const captureThumbnail = async (worksheetId: string) => {
+    if (!worksheetRef.current) return null;
+    
+    setIsCapturing(true);
+    try {
+      const html2canvas = (await import('html2canvas')).default;
+      const canvas = await html2canvas(worksheetRef.current, {
+        width: 1200,
+        height: 800,
+        scale: 0.5,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        scrollX: 0,
+        scrollY: 0,
+        logging: false,
+        ignoreElements: (element) => {
+          // 편집 모드 버튼이나 불필요한 요소 제외
+          return element.classList.contains('edit-mode-button') || 
+                 element.classList.contains('capture-exclude');
+        }
+      });
+      
+      const thumbnailUrl = canvas.toDataURL('image/png', 0.8);
+      
+      // 로컬 스토리지에 썸네일 저장
+      const thumbnails = JSON.parse(localStorage.getItem('worksheet_thumbnails') || '{}');
+      thumbnails[worksheetId] = thumbnailUrl;
+      localStorage.setItem('worksheet_thumbnails', JSON.stringify(thumbnails));
+      
+      console.log('작업지시서 썸네일 캡처 완료:', worksheetId);
+      return thumbnailUrl;
+    } catch (error) {
+      console.error('썸네일 캡처 오류:', error);
+      return null;
+    } finally {
+      setIsCapturing(false);
+    }
+  };
+
+  // 수동 썸네일 캡처 함수
+  const handleManualCapture = async () => {
+    if (!worksheet) return;
+    
+    const worksheetId = worksheet.id.toString();
+    const thumbnailUrl = await captureThumbnail(worksheetId);
+    
+    if (thumbnailUrl) {
+      alert('썸네일이 성공적으로 캡처되었습니다!');
+    } else {
+      alert('썸네일 캡처에 실패했습니다.');
+    }
+  };
 
   useEffect(() => {
     if (params.id) {
@@ -73,6 +130,13 @@ export default function EditWorksheetPage() {
         size_range: formData.size_range,
         content: formData.content
       });
+      
+      // 썸네일 캡처
+      try {
+        await captureThumbnail(worksheetId.toString());
+      } catch (captureError) {
+        console.error('썸네일 캡처 오류:', captureError);
+      }
       
       alert("작업지시서가 수정되었습니다.");
       router.push("/mypage");
@@ -169,7 +233,7 @@ export default function EditWorksheetPage() {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <form onSubmit={handleSubmit} className="p-6 space-y-6" ref={worksheetRef}>
             {/* 제목 */}
             <div>
               <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
@@ -241,6 +305,25 @@ export default function EditWorksheetPage() {
 
             {/* 버튼 */}
             <div className="flex justify-end space-x-4 pt-6 border-t">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleManualCapture}
+                disabled={isCapturing}
+                title="썸네일 캡처"
+              >
+                {isCapturing ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
+                    캡처 중...
+                  </>
+                ) : (
+                  <>
+                    <Camera className="w-4 h-4 mr-2" />
+                    썸네일
+                  </>
+                )}
+              </Button>
               <Button
                 type="button"
                 variant="outline"

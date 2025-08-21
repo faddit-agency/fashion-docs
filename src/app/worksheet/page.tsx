@@ -11,8 +11,9 @@ import { PDFDownload } from "@/components/ui/pdf-download";
 import { Toggle } from "@/components/ui/toggle";
 import { DriveSelector } from "@/components/ui/drive-selector";
 import { TechnicalDrawingEditor } from "@/components/ui/technical-drawing-editor";
-import { FileText, X, FolderOpen } from "lucide-react";
+import { FileText, X, FolderOpen, Camera } from "lucide-react";
 import Link from "next/link";
+import { generateWorksheetThumbnail, saveWorksheetThumbnail } from "@/components/ui/worksheet-thumbnail";
 
 interface WorksheetData {
   id?: string;
@@ -109,7 +110,78 @@ export default function WorksheetPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
+  const [isCapturing, setIsCapturing] = useState(false);
   const worksheetRef = useRef<HTMLDivElement>(null);
+
+  // 썸네일 캡처 함수
+  const captureThumbnail = async (worksheetId: string) => {
+    if (!worksheetRef.current) return null;
+    
+    setIsCapturing(true);
+    try {
+      const html2canvas = (await import('html2canvas')).default;
+      const canvas = await html2canvas(worksheetRef.current, {
+        width: 2000,
+        height: 1600,
+        scale: 0.8,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        scrollX: 0,
+        scrollY: 0,
+        logging: false,
+        ignoreElements: (element) => {
+          // 편집 모드 버튼이나 불필요한 요소 제외
+          return element.classList.contains('edit-mode-button') || 
+                 element.classList.contains('capture-exclude');
+        }
+      });
+      
+      // 이미지 품질을 낮춰서 파일 크기 줄이기
+      const thumbnailUrl = canvas.toDataURL('image/jpeg', 0.7);
+      
+      // 캡처된 이미지 확인
+      console.log('캡처된 썸네일 정보:', {
+        worksheetId,
+        thumbnailLength: thumbnailUrl.length,
+        thumbnailType: thumbnailUrl.substring(0, 30),
+        canvasWidth: canvas.width,
+        canvasHeight: canvas.height
+      });
+      
+      // 썸네일 저장
+      saveWorksheetThumbnail(worksheetId, thumbnailUrl);
+      
+      console.log('작업지시서 썸네일 캡처 완료:', worksheetId);
+      return thumbnailUrl;
+    } catch (error) {
+      console.error('썸네일 캡처 오류:', error);
+      return null;
+    } finally {
+      setIsCapturing(false);
+    }
+  };
+
+  // 수동 썸네일 캡처 함수
+  const handleManualCapture = async () => {
+    if (!worksheetData) return;
+    
+    // 실제 worksheet ID 사용 (없으면 현재 시간 기반 ID)
+    const worksheetId = worksheetData.id || `temp_${Date.now()}`;
+    console.log('썸네일 캡처 시작 - worksheetId:', worksheetId);
+    
+    const thumbnailUrl = await captureThumbnail(worksheetId);
+    
+    if (thumbnailUrl) {
+      alert('썸네일이 성공적으로 캡처되었습니다!');
+      // 마이페이지로 이동하여 결과 확인
+      setTimeout(() => {
+        window.open('/mypage', '_blank');
+      }, 1000);
+    } else {
+      alert('썸네일 캡처에 실패했습니다.');
+    }
+  };
 
   // const _sampleWorksheetData: WorksheetData = {
   //   title: "베이직 셔츠",
@@ -538,29 +610,57 @@ export default function WorksheetPage() {
       if (data.success) {
         setSaveMessage(data.message);
         setLastSavedAt(new Date().toISOString());
-        // 데모 모드 반영: 로컬 스토리지에 추가 저장하여 마이페이지 탭에 노출
+        
+        // 화면 캡처하여 썸네일 생성
         try {
-          const localKey = 'demo_worksheets';
-          const prevJson = typeof window !== 'undefined' ? window.localStorage.getItem(localKey) : null;
-          const prev = prevJson ? JSON.parse(prevJson) : [];
-          const sizeRange = Array.isArray(worksheetData?.sizeSpec?.sizes)
-            ? `${worksheetData.sizeSpec.sizes[0]}~${worksheetData.sizeSpec.sizes[worksheetData.sizeSpec.sizes.length - 1]}`
-            : 'S~XL';
-          const newItem = {
-            id: Number(data.id) || Date.now(),
-            user_id: user.id,
-            title: worksheetData.title || '작업지시서',
-            category: worksheetData.category || '기타',
-            size_range: sizeRange,
-            content: worksheetData,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          };
-          const merged = [newItem, ...prev.filter((w: any) => w.id !== newItem.id)];
-          if (typeof window !== 'undefined') {
-            window.localStorage.setItem(localKey, JSON.stringify(merged));
+          if (worksheetRef.current) {
+            const worksheetId = data.id || Date.now();
+            console.log('저장 후 썸네일 캡처 시작 - worksheetId:', worksheetId);
+            
+            const thumbnailUrl = await captureThumbnail(worksheetId.toString());
+            
+            // 데모 모드 반영: 로컬 스토리지에 추가 저장하여 마이페이지 탭에 노출
+            try {
+              const localKey = 'demo_worksheets';
+              const prevJson = typeof window !== 'undefined' ? window.localStorage.getItem(localKey) : null;
+              const prev = prevJson ? JSON.parse(prevJson) : [];
+              const sizeRange = Array.isArray(worksheetData?.sizeSpec?.sizes)
+                ? `${worksheetData.sizeSpec.sizes[0]}~${worksheetData.sizeSpec.sizes[worksheetData.sizeSpec.sizes.length - 1]}`
+                : 'S~XL';
+              const newItem = {
+                id: Number(worksheetId),
+                user_id: user.id,
+                title: worksheetData.title || '작업지시서',
+                category: worksheetData.category || '기타',
+                size_range: sizeRange,
+                content: worksheetData,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              };
+              const merged = [newItem, ...prev.filter((w: any) => w.id !== newItem.id)];
+              if (typeof window !== 'undefined') {
+                window.localStorage.setItem(localKey, JSON.stringify(merged));
+              }
+              
+              // 썸네일이 캡처되지 않았으면 기본 썸네일 생성
+              if (!thumbnailUrl) {
+                try {
+                  const defaultThumbnailUrl = await generateWorksheetThumbnail(
+                    newItem.id.toString(),
+                    newItem.title,
+                    newItem.category
+                  );
+                  saveWorksheetThumbnail(newItem.id.toString(), defaultThumbnailUrl);
+                } catch (thumbnailError) {
+                  console.error('기본 썸네일 생성 오류:', thumbnailError);
+                }
+              }
+            } catch {}
           }
-        } catch {}
+        } catch (captureError) {
+          console.error('화면 캡처 오류:', captureError);
+        }
+        
         // 3초 후 메시지 숨기기
         setTimeout(() => setSaveMessage(null), 3000);
       } else {
@@ -755,15 +855,18 @@ export default function WorksheetPage() {
                   <Button 
                     variant="outline" 
                     onClick={() => setIsEditMode(!isEditMode)}
+                    className="edit-mode-button"
                   >
                     {isEditMode ? "보기 모드" : "수정"}
                   </Button>
                   <Button 
                     variant="outline"
                     onClick={() => setShowChat(!showChat)}
+                    className="capture-exclude ai-chat-button"
                   >
                     {showChat ? "채팅 닫기" : "AI 채팅"}
                   </Button>
+
                   <Button
                     onClick={handleSave}
                     disabled={isSaving}
@@ -789,6 +892,7 @@ export default function WorksheetPage() {
                     type="element"
                     variant="primary"
                     size="md"
+                    className="capture-exclude"
                   />
                   </div>
                 </div>
@@ -809,7 +913,7 @@ export default function WorksheetPage() {
             )}
 
             {/* 메인 콘텐츠 영역 */}
-            <div className="flex-1 flex overflow-hidden">
+            <div className="flex-1 flex overflow-hidden" ref={worksheetRef}>
               {/* 기본정보 섹션 */}
               {showDetails && (
                 <div className="w-80 border-r border-border bg-muted overflow-y-auto flex-shrink-0">

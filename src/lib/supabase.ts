@@ -16,6 +16,7 @@ export interface Product {
   name: string;
   description: string;
   price: number;
+  original_price?: number; // 원래 가격 (할인 시)
   category: string;
   gender: string;
   season: string;
@@ -23,6 +24,9 @@ export interface Product {
   file_url: string;
   image_urls: string[];
   status?: 'active' | 'inactive';
+  is_promotion?: boolean; // 프로모션 상품 여부
+  promotion_code?: string; // 프로모션 코드
+  items_count?: number; // 패키지 상품의 경우 아이템 개수
   created_at: string;
   updated_at: string;
 }

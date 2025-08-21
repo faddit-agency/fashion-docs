@@ -16,6 +16,7 @@ import { useCart } from "@/hooks/use-cart";
 import { getSampleProduct } from "@/lib/sample-data";
 import Link from "next/link";
 import { Star, ChevronLeft, ChevronRight, ZoomIn, ArrowLeft, ShoppingCart, Check } from "lucide-react";
+import { PromotionCodeInput } from "@/components/ui/promotion-code-input";
 
 // 샘플 리뷰 데이터
 const sampleReviews = [
@@ -63,6 +64,8 @@ export default function ProductDetailPage() {
   const [activeTab, setActiveTab] = useState<'description' | 'reviews' | 'specs'>('description');
   const [cartLoading, setCartLoading] = useState(false);
   const [cartSuccess, setCartSuccess] = useState(false);
+  const [appliedPromoCode, setAppliedPromoCode] = useState<string>("");
+  const [promoDiscount, setPromoDiscount] = useState<number>(0);
   const { updateCartCount } = useCart(user?.id);
 
   useEffect(() => {
@@ -109,6 +112,16 @@ export default function ProductDetailPage() {
     setShowPaymentModal(false);
     alert("결제가 완료되었습니다! 파일 다운로드가 가능합니다.");
     router.push("/mypage");
+  };
+
+  const handlePromoCodeApplied = (code: string, discount: number) => {
+    setAppliedPromoCode(code);
+    setPromoDiscount(discount);
+  };
+
+  const handlePromoCodeRemoved = () => {
+    setAppliedPromoCode("");
+    setPromoDiscount(0);
   };
 
   const handleAddToCart = async () => {
@@ -387,11 +400,24 @@ export default function ProductDetailPage() {
                 </h1>
                 
                 <div className="flex items-center space-x-4 mb-6">
-
-                  <span className="text-4xl font-bold text-foreground">
-                    {formatPrice(product.price)}
-                  </span>
-                  <span className="text-lg text-muted-foreground">원</span>
+                  {product.original_price && product.original_price > product.price ? (
+                    <div className="flex items-center space-x-2">
+                      <span className="text-2xl line-through text-muted-foreground">
+                        {formatPrice(product.original_price)}
+                      </span>
+                      <span className="text-4xl font-bold text-foreground">
+                        {formatPrice(product.price)}
+                      </span>
+                      <span className="text-lg text-muted-foreground">원</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center space-x-2">
+                      <span className="text-4xl font-bold text-foreground">
+                        {formatPrice(product.price)}
+                      </span>
+                      <span className="text-lg text-muted-foreground">원</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* 평점 및 리뷰 */}
@@ -447,6 +473,38 @@ export default function ProductDetailPage() {
                   </button>
                 </div>
               </div>
+
+              {/* 프로모션 코드 입력 */}
+              <div className="mb-6">
+                <h3 className="text-lg font-medium text-foreground mb-3">프로모션 코드</h3>
+                              <PromotionCodeInput
+                onCodeApplied={handlePromoCodeApplied}
+                onCodeRemoved={handlePromoCodeRemoved}
+                appliedCode={appliedPromoCode}
+                discount={promoDiscount}
+                isPromotionProduct={false}
+              />
+              </div>
+
+              {/* 가격 정보 */}
+              {promoDiscount > 0 && (
+                <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-foreground">상품 금액</span>
+                    <span className="text-foreground">{formatPrice(product.price * quantity)}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-green-600">
+                    <span>할인 금액 ({Math.round(promoDiscount * 100)}%)</span>
+                    <span>-{formatPrice(product.price * quantity * promoDiscount)}</span>
+                  </div>
+                  <div className="flex items-center justify-between pt-2 border-t border-green-200">
+                    <span className="font-medium text-foreground">총 결제 금액</span>
+                    <span className="text-lg font-bold text-foreground">
+                      {formatPrice(product.price * quantity * (1 - promoDiscount))}
+                    </span>
+                  </div>
+                </div>
+              )}
 
               {/* 구매 버튼 */}
               <div className="space-y-4 mb-8">

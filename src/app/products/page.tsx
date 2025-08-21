@@ -417,6 +417,11 @@ export default function ProductsPage() {
                     </div>
                     <div className="flex-1 space-y-2">
                       <div className="flex items-center gap-2 flex-wrap">
+                        {product.is_promotion && (
+                          <span className="text-xs bg-gradient-to-r from-purple-500 to-pink-500 text-white px-2.5 py-0.5 rounded-full font-medium">
+                            🎉 프로모션
+                          </span>
+                        )}
                         <span className="text-xs text-primary bg-primary/10 px-2.5 py-0.5 rounded-full font-medium">
                           {product.category}
                         </span>
@@ -432,7 +437,18 @@ export default function ProductsPage() {
                           </p>
                         </div>
                         <div className="flex-shrink-0 text-right">
-                          <div className="text-lg font-bold text-foreground">{formatPrice(product.price)}</div>
+                          <div className="text-lg font-bold text-foreground">
+                            {product.original_price && product.original_price > product.price ? (
+                              <div className="flex items-center space-x-2">
+                                <span className="line-through text-muted-foreground text-sm">
+                                  {formatPrice(product.original_price)}
+                                </span>
+                                <span>{formatPrice(product.price)}</span>
+                              </div>
+                            ) : (
+                              formatPrice(product.price)
+                            )}
+                          </div>
                           <div className="flex space-x-2 mt-2">
                             <Button 
                               size="sm"
@@ -457,7 +473,7 @@ export default function ProductsPage() {
                               asChild 
                               className="bg-primary hover:bg-primary/90 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200"
                             >
-                              <Link href={`/products/${product.id}`}>
+                              <Link href={product.is_promotion ? "/products/promotion" : `/products/${product.id}`}>
                                 상세보기
                               </Link>
                             </Button>
@@ -473,9 +489,16 @@ export default function ProductsPage() {
                     </div>
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-primary bg-primary/10 px-3 py-1 rounded-full font-medium">
-                          {product.category}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          {product.is_promotion && (
+                            <span className="text-xs bg-gradient-to-r from-purple-500 to-pink-500 text-white px-2.5 py-0.5 rounded-full font-medium">
+                              🎉 프로모션
+                            </span>
+                          )}
+                          <span className="text-sm text-primary bg-primary/10 px-3 py-1 rounded-full font-medium">
+                            {product.category}
+                          </span>
+                        </div>
                         <span className="text-sm text-muted-foreground font-medium">{product.gender}</span>
                       </div>
                       <h3 className="text-lg font-semibold text-foreground leading-tight">
@@ -485,9 +508,18 @@ export default function ProductsPage() {
                         {product.description}
                       </p>
                                               <div className="flex items-center justify-between pt-2">
-                          <span className="text-2xl font-bold text-foreground">
-                            {formatPrice(product.price)}
-                          </span>
+                          <div className="text-2xl font-bold text-foreground">
+                            {product.original_price && product.original_price > product.price ? (
+                              <div className="flex flex-col items-end">
+                                <span className="line-through text-muted-foreground text-sm">
+                                  {formatPrice(product.original_price)}
+                                </span>
+                                <span>{formatPrice(product.price)}</span>
+                              </div>
+                            ) : (
+                              formatPrice(product.price)
+                            )}
+                          </div>
                           <div className="flex space-x-2">
                             <Button 
                               size="sm"

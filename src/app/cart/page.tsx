@@ -12,6 +12,7 @@ import { CartItem } from "@/lib/supabase";
 import { useCart } from "@/hooks/use-cart";
 import Link from "next/link";
 import { Trash2, Minus, Plus, ShoppingCart } from "lucide-react";
+import { PromotionCodeInput } from "@/components/ui/promotion-code-input";
 
 export default function CartPage() {
   const router = useRouter();
@@ -21,6 +22,8 @@ export default function CartPage() {
   const [error, setError] = useState<string | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
+  const [appliedPromoCode, setAppliedPromoCode] = useState<string>("");
+  const [promoDiscount, setPromoDiscount] = useState<number>(0);
   const { updateCartCount } = useCart(user?.id);
 
   useEffect(() => {
@@ -123,10 +126,22 @@ export default function CartPage() {
     router.push("/mypage");
   };
 
+  const handlePromoCodeApplied = (code: string, discount: number) => {
+    setAppliedPromoCode(code);
+    setPromoDiscount(discount);
+  };
+
+  const handlePromoCodeRemoved = () => {
+    setAppliedPromoCode("");
+    setPromoDiscount(0);
+  };
+
   const selectedItemsData = cartItems.filter(item => selectedItems.includes(item.id));
-  const totalPrice = selectedItemsData.reduce((sum, item) => 
+  const subtotal = selectedItemsData.reduce((sum, item) => 
     sum + (item.product?.price || 0) * item.quantity, 0
   );
+  const discountAmount = subtotal * promoDiscount;
+  const totalPrice = subtotal - discountAmount;
 
   if (loading) {
     return (
@@ -307,12 +322,37 @@ export default function CartPage() {
 
               {/* 결제 섹션 */}
               <div className="p-6 border-t border-border bg-muted/30">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="text-lg font-medium text-foreground">
-                    선택된 상품 ({selectedItems.length}개)
+                {/* 프로모션 코드 입력 */}
+                {selectedItems.length > 0 && (
+                  <div className="mb-6">
+                    <h3 className="text-lg font-medium text-foreground mb-3">프로모션 코드</h3>
+                    <PromotionCodeInput
+                      onCodeApplied={handlePromoCodeApplied}
+                      onCodeRemoved={handlePromoCodeRemoved}
+                      appliedCode={appliedPromoCode}
+                      discount={promoDiscount}
+                      isPromotionProduct={false}
+                    />
                   </div>
-                  <div className="text-2xl font-bold text-foreground">
-                    {formatPrice(totalPrice)}
+                )}
+
+                {/* 가격 정보 */}
+                <div className="space-y-3 mb-6">
+                  <div className="flex items-center justify-between">
+                    <span className="text-foreground">상품 금액</span>
+                    <span className="text-foreground">{formatPrice(subtotal)}</span>
+                  </div>
+                  {promoDiscount > 0 && (
+                    <div className="flex items-center justify-between text-green-600">
+                      <span>할인 금액 ({Math.round(promoDiscount * 100)}%)</span>
+                      <span>-{formatPrice(discountAmount)}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between pt-3 border-t border-border">
+                    <span className="text-lg font-medium text-foreground">총 결제 금액</span>
+                    <span className="text-2xl font-bold text-foreground">
+                      {formatPrice(totalPrice)}
+                    </span>
                   </div>
                 </div>
                 

@@ -5,9 +5,24 @@ import Image from "next/image";
 import { Header } from "@/components/layout/header";
 import { ArrowRight, Sparkles, Users, FileText, ShoppingBag } from "lucide-react";
 import { useTheme } from "@/contexts/theme-context";
+import { WelcomePopup } from "@/components/ui/welcome-popup";
+import { useUser } from "@clerk/nextjs";
+import { useState, useEffect } from "react";
 
 export default function Home() {
   const { theme } = useTheme();
+  const { user, isLoaded } = useUser();
+  const [showWelcomePopup, setShowWelcomePopup] = useState(false);
+
+  // 첫 로그인 팝업 표시 여부 확인
+  useEffect(() => {
+    if (isLoaded && user) {
+      const welcomeCompleted = localStorage.getItem('faddit_welcome_completed');
+      if (!welcomeCompleted) {
+        setShowWelcomePopup(true);
+      }
+    }
+  }, [isLoaded, user]);
 
   return (
     <div className="min-h-screen">
@@ -294,6 +309,12 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      {/* 첫 로그인 팝업 */}
+      <WelcomePopup 
+        isOpen={showWelcomePopup} 
+        onClose={() => setShowWelcomePopup(false)} 
+      />
     </div>
   );
 }

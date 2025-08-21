@@ -14,6 +14,7 @@ function PaymentSuccessContent() {
   const itemsParam = searchParams.get("items");
   const [confirmed, setConfirmed] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [promotionAdded, setPromotionAdded] = useState(false);
 
   const items = useMemo<Array<{ id: number; quantity: number; price: number }>>(() => {
     if (!itemsParam) return [];
@@ -38,6 +39,23 @@ function PaymentSuccessContent() {
           throw new Error("결제 확인 실패");
         }
         setConfirmed(true);
+        
+        // 프로모션 상품인 경우 드라이브에 자동 추가
+        const promotionItems = items.filter(item => item.id === 999);
+        if (promotionItems.length > 0) {
+          try {
+            const userId = "user1"; // 실제로는 세션에서 조회
+            await fetch("/api/drive/promotion-assets", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ userId, productId: 999 })
+            });
+            console.log("프로모션 패키지가 드라이브에 추가되었습니다.");
+            setPromotionAdded(true);
+          } catch (promoError) {
+            console.error("프로모션 에셋 추가 오류:", promoError);
+          }
+        }
       } catch (e: any) {
         setError(e.message || "결제 확인 중 오류가 발생했습니다.");
       }
@@ -87,6 +105,11 @@ function PaymentSuccessContent() {
             )}
             {!error && !confirmed && (
               <div className="p-3 rounded bg-yellow-50 text-yellow-700 text-sm">결제 확인 중입니다...</div>
+            )}
+            {promotionAdded && (
+              <div className="p-3 rounded bg-green-50 text-green-700 text-sm">
+                🎉 프로모션 패키지(42개 패턴/도식화)가 드라이브에 자동으로 추가되었습니다!
+              </div>
             )}
             <Button className="w-full" asChild>
               <Link href="/mypage">

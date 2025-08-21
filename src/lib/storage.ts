@@ -192,3 +192,124 @@ export class StorageService {
     return true;
   }
 } 
+
+// 사용자별 스토리지 제한 관리
+
+export interface StorageUsage {
+  userId: string;
+  usedBytes: number;
+  maxBytes: number;
+  lastUpdated: string;
+}
+
+export interface StorageLimit {
+  free: number; // 1GB
+  premium: number; // 10GB
+  enterprise: number; // 100GB
+}
+
+export const STORAGE_LIMITS: StorageLimit = {
+  free: 1024 * 1024 * 1024, // 1GB
+  premium: 10 * 1024 * 1024 * 1024, // 10GB
+  enterprise: 100 * 1024 * 1024 * 1024 // 100GB
+};
+
+// 사용자별 스토리지 사용량 조회
+export const getUserStorageUsage = async (userId: string): Promise<StorageUsage> => {
+  try {
+    // 실제로는 데이터베이스에서 조회
+    const stored = localStorage.getItem(`storage_usage_${userId}`);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+    
+    // 기본값 반환
+    return {
+      userId,
+      usedBytes: 0,
+      maxBytes: STORAGE_LIMITS.free,
+      lastUpdated: new Date().toISOString()
+    };
+  } catch (error) {
+    console.error('스토리지 사용량 조회 오류:', error);
+    return {
+      userId,
+      usedBytes: 0,
+      maxBytes: STORAGE_LIMITS.free,
+      lastUpdated: new Date().toISOString()
+    };
+  }
+};
+
+// 스토리지 사용량 업데이트
+export const updateStorageUsage = async (userId: string, fileSizeBytes: number): Promise<StorageUsage> => {
+  try {
+    const currentUsage = await getUserStorageUsage(userId);
+    const newUsedBytes = currentUsage.usedBytes + fileSizeBytes;
+    
+    const updatedUsage: StorageUsage = {
+      ...currentUsage,
+      usedBytes: newUsedBytes,
+      lastUpdated: new Date().toISOString()
+    };
+    
+    // 로컬 스토리지에 저장 (실제로는 데이터베이스에 저장)
+    localStorage.setItem(`storage_usage_${userId}`, JSON.stringify(updatedUsage));
+    
+    return updatedUsage;
+  } catch (error) {
+    console.error('스토리지 사용량 업데이트 오류:', error);
+    throw error;
+  }
+};
+
+// 스토리지 제한 확인
+export const checkStorageLimit = async (userId: string, fileSizeBytes: number): Promise<{
+  allowed: boolean;
+  currentUsage: StorageUsage;
+  remainingBytes: number;
+  errorMessage?: string;
+}> => {
+  try {
+    const currentUsage = await getUserStorageUsage(userId);
+    const remainingBytes = currentUsage.maxBytes - currentUsage.usedBytes;
+    const allowed = remainingBytes >= fileSizeBytes;
+    
+    return {
+      allowed,
+      currentUsage,
+      remainingBytes,
+      errorMessage: allowed ? undefined : 
+        `스토리지 용량이 부족합니다. 현재 사용량: ${formatBytes(currentUsage.usedBytes)} / ${formatBytes(currentUsage.maxBytes)}`
+    };
+  } catch (error) {
+    console.error('스토리지 제한 확인 오류:', error);
+    return {
+      allowed: false,
+      currentUsage: {
+        userId,
+        usedBytes: 0,
+        maxBytes: STORAGE_LIMITS.free,
+        lastUpdated: new Date().toISOString()
+      },
+      remainingBytes: 0,
+      errorMessage: '스토리지 제한 확인 중 오류가 발생했습니다.'
+    };
+  }
+};
+
+// 바이트를 읽기 쉬운 형태로 변환
+export const formatBytes = (bytes: number): string => {
+  if (bytes === 0) return '0 Bytes';
+  
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
+
+// 사용률 계산 (0-100)
+export const getStorageUsagePercentage = (usedBytes: number, maxBytes: number): number => {
+  return Math.round((usedBytes / maxBytes) * 100);
+}; 
