@@ -18,6 +18,9 @@ type Asset = {
   uploadedAt: string;
   fileSize?: string;
   fileType?: string;
+  metadata?: {
+    isPromotion?: boolean;
+  };
 };
 
 export default function DrivePage() {
