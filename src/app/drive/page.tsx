@@ -63,7 +63,7 @@ export default function DrivePage() {
         
         const defaultAssets = [
           { id: "1", name: "패턴 DXF", path: "products/1/patterns/sample.dxf", category: "패턴", uploadedAt: new Date().toISOString(), fileType: "dxf" },
-          { id: "2", name: "도식화 PDF", path: "products/1/specs/techpack.pdf", category: "인쇄", uploadedAt: new Date().toISOString(), fileType: "pdf" },
+          { id: "2", name: "도식화 PDF", path: "products/1/specs/techpack.pdf", category: "도식화", uploadedAt: new Date().toISOString(), fileType: "pdf" },
           { id: "3", name: "라벨 가이드", path: "assets/labels/guide.pdf", category: "라벨", uploadedAt: new Date().toISOString(), fileType: "pdf" },
         ];
         
