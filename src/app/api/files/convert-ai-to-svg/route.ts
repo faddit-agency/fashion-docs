@@ -162,8 +162,8 @@ export async function POST(request: NextRequest) {
       pngBuffer = await convertAiToPng(file);
     }
     
-    // PNG 파일 생성
-    const pngFile = new File([pngBuffer], fileName, { type: 'image/png' });
+    // PNG 파일 생성 (Buffer를 Uint8Array로 변환)
+    const pngFile = new File([new Uint8Array(pngBuffer)], fileName, { type: 'image/png' });
 
     console.log('AI 변환 파일 정보:', {
       originalName: file.name,

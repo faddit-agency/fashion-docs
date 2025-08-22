@@ -72,8 +72,8 @@ export async function POST(request: NextRequest) {
     fs.unlinkSync(tempPdfPath);
     fs.unlinkSync(imagePath);
 
-    // 이미지 파일 생성
-    const imageFile = new File([imageBuffer], fileName, { type: 'image/png' });
+    // 이미지 파일 생성 (Buffer를 Uint8Array로 변환)
+    const imageFile = new File([new Uint8Array(imageBuffer)], fileName, { type: 'image/png' });
 
     console.log('PDF 변환 파일 정보:', {
       originalName: file.name,
