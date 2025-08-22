@@ -18,6 +18,7 @@ export default function EditWorksheetPage() {
   const [isCapturing, setIsCapturing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const worksheetRef = useRef<HTMLDivElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -233,7 +234,7 @@ export default function EditWorksheetPage() {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-6 space-y-6" ref={worksheetRef}>
+          <form onSubmit={handleSubmit} className="p-6 space-y-6" ref={formRef}>
             {/* 제목 */}
             <div>
               <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
