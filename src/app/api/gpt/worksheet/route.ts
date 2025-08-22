@@ -53,9 +53,8 @@ export async function POST(request: NextRequest) {
           contactInfo: "010-1234-5678"
         },
         technicalDrawing: {
-          frontImage: "/api/placeholder/400/300",
-          backImage: "/api/placeholder/400/300",
-          annotations: ["앞면: 포켓 위치", "뒷면: 플리츠 디테일"]
+          image: "/api/placeholder/drawing?width=800&height=600",
+          annotations: ["포켓 위치", "플리츠 디테일"]
         },
         workNotes: "면 소재 사용, 깔끔한 실루엣으로 제작",
         sizeSpec: {

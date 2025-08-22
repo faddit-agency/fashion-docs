@@ -7,7 +7,7 @@ import { FileDownload } from "@/components/ui/file-download";
 import { Trash2 } from "lucide-react";
 
 import { DriveSelector } from "@/components/ui/drive-selector";
-import { TechnicalDrawingEditor } from "@/components/ui/technical-drawing-editor";
+import { AdvancedDrawingEditor } from "@/components/ui/advanced-drawing-editor";
 import { getUserStorageUsage, formatBytes, getStorageUsagePercentage } from "@/lib/storage";
 
 type Asset = {
@@ -361,14 +361,15 @@ export default function DrivePage() {
 
       {/* 도식화 편집기 */}
       {isEditorOpen && (
-        <TechnicalDrawingEditor
-          frontImage={frontImageUrl}
-          backImage={backImageUrl}
-          onSave={(front, back) => {
-            console.log("도식화 저장", { front, back });
+        <AdvancedDrawingEditor
+          svgUrl={frontImageUrl}
+          layers={[]}
+          onSave={(layers, svgContent) => {
+            console.log("도식화 저장", { layers, svgContent });
             setIsEditorOpen(false);
           }}
           onClose={() => setIsEditorOpen(false)}
+          isEditMode={true}
         />
       )}
     </div>

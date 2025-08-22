@@ -1177,11 +1177,11 @@ function MyPageContent() {
                           <div key={`recent-ws-${worksheet.id}-${worksheet.updated_at || worksheet.created_at || idx}`} 
                                className="flex items-center gap-4 p-4 bg-white border border-gray-200 rounded-lg hover:shadow-md transition-shadow duration-200">
                             {/* 썸네일 이미지 */}
-                            <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center">
+                            <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center p-0">
                               <img
                                 src={generateThumbnail(worksheet)}
                                 alt={worksheet.title}
-                                className="w-full h-full object-contain bg-white"
+                                className="w-full h-full object-cover"
                                 onError={(e) => {
                                   const target = e.target as HTMLImageElement;
                                   target.style.display = 'none';
@@ -1435,13 +1435,13 @@ function MyPageContent() {
 
                         return (
                           <div key={`ws-${worksheet.id}-${worksheet.updated_at || worksheet.created_at || idx}`} 
-                               className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-200 min-h-[280px]">
+                               className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-200">
                             {/* 썸네일 이미지 */}
-                            <div className="aspect-[5/4] bg-gray-100 relative flex items-center justify-center">
+                            <div className="aspect-[4/3] bg-gray-100 relative flex items-center justify-center p-0">
                               <img
                                 src={generateThumbnail(worksheet)}
                                 alt={worksheet.title}
-                                className="max-w-full max-h-full object-contain bg-white"
+                                className="w-full h-full object-cover"
                                 onError={(e) => {
                                   const target = e.target as HTMLImageElement;
                                   console.log('이미지 로드 실패:', worksheet.id, 'src:', target.src.substring(0, 100) + '...');
@@ -1472,10 +1472,10 @@ function MyPageContent() {
                             </div>
                             
                             {/* 카드 내용 */}
-                            <div className="p-4">
-                              <h3 className="font-semibold text-gray-900 mb-2 line-clamp-1">{worksheet.title}</h3>
+                            <div className="p-3">
+                              <h3 className="font-semibold text-gray-900 mb-1 line-clamp-1">{worksheet.title}</h3>
                               
-                              <div className="flex items-center gap-2 text-xs text-gray-500 mb-3">
+                              <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
                                 <span>생성: {formatDate(new Date(worksheet.created_at))}</span>
                                 <span>•</span>
                                 <span>사이즈: {worksheet.size_range}</span>

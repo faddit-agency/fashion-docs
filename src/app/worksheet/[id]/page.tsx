@@ -7,8 +7,8 @@ import { useUser } from "@clerk/nextjs";
 import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import dynamic from "next/dynamic";
-const TechnicalDrawingEditor = dynamic(
-  () => import("@/components/ui/technical-drawing-editor").then(m => m.TechnicalDrawingEditor),
+const AdvancedDrawingEditor = dynamic(
+  () => import("@/components/ui/advanced-drawing-editor").then(m => m.AdvancedDrawingEditor),
   { ssr: false }
 );
 const BrandLoader = dynamic(
@@ -41,11 +41,10 @@ interface WorksheetData {
     contactInfo: string;
   };
   technicalDrawing: {
-    frontImage: string;
-    backImage: string;
+    image: string;
     annotations: string[];
-    frontElements?: any[];
-    backElements?: any[];
+    layers?: any[];
+    svgContent?: string;
   };
   workNotes: string;
   sizeSpec: {
@@ -393,14 +392,14 @@ export default function WorksheetDetailPage() {
     }, 0);
   };
 
-  const handleDrawingSave = (frontElements: any[], backElements: any[]) => {
+  const handleDrawingSave = (layers: any[], svgContent: string) => {
     if (worksheetData) {
       setWorksheetData(prev => ({
         ...prev!,
         technicalDrawing: {
           ...prev!.technicalDrawing,
-          frontElements,
-          backElements
+          layers,
+          svgContent
         }
       }));
     }
@@ -1183,11 +1182,12 @@ export default function WorksheetDetailPage() {
 
         {/* 도식화 편집기 */}
         {showDrawingEditor && worksheetData && (
-          <TechnicalDrawingEditor
-            frontImage={worksheetData.technicalDrawing.frontImage}
-            backImage={worksheetData.technicalDrawing.backImage}
+          <AdvancedDrawingEditor
+            svgUrl={worksheetData.technicalDrawing.frontImage}
+            layers={worksheetData.technicalDrawing.layers}
             onSave={handleDrawingSave}
             onClose={() => setShowDrawingEditor(false)}
+            isEditMode={true}
           />
         )}
       </div>

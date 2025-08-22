@@ -1,14 +1,26 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://your-project.supabase.co';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'your-anon-key';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-// Supabase 설정이 기본값인지 확인
-const isDefaultConfig = supabaseUrl === 'https://your-project.supabase.co' || supabaseAnonKey === 'your-anon-key';
+// Supabase 설정이 있는지 확인
+const hasSupabaseConfig = supabaseUrl && supabaseAnonKey && 
+  !supabaseUrl.includes('your-project') && 
+  !supabaseAnonKey.includes('your-anon-key');
 
-export const supabase = isDefaultConfig 
-  ? null 
-  : createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = hasSupabaseConfig 
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null;
+
+// Supabase 설정 상태 로깅
+if (typeof window === 'undefined') { // 서버 사이드에서만 로깅
+  console.log('Supabase 설정 상태:', {
+    hasUrl: !!supabaseUrl,
+    hasKey: !!supabaseAnonKey,
+    configured: hasSupabaseConfig,
+    url: supabaseUrl ? `${supabaseUrl.substring(0, 20)}...` : 'None'
+  });
+}
 
 // 데이터베이스 타입 정의
 export interface Product {

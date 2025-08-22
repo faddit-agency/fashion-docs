@@ -29,27 +29,43 @@ export default function EditWorksheetPage() {
 
   // 썸네일 캡처 함수
   const captureThumbnail = async (worksheetId: string) => {
-    if (!worksheetRef.current) return null;
+    if (!formRef.current) return null;
     
     setIsCapturing(true);
     try {
+      // 캡처 전에 패딩 제거
+      const originalPadding = formRef.current.style.padding;
+      formRef.current.style.padding = '0';
+      
       const html2canvas = (await import('html2canvas')).default;
-      const canvas = await html2canvas(worksheetRef.current, {
+      
+      // 실제 콘텐츠 높이 계산
+      const contentHeight = formRef.current.scrollHeight;
+      const captureHeight = Math.min(contentHeight, 800);
+      
+      const canvas = await html2canvas(formRef.current, {
         width: 1200,
-        height: 800,
-        scale: 0.5,
+        height: captureHeight,
+        scale: 0.8,
         useCORS: true,
         allowTaint: true,
-        backgroundColor: '#ffffff',
+        backgroundColor: '#f5f5f5',
         scrollX: 0,
         scrollY: 0,
         logging: false,
+        x: 0,
+        y: 0,
+        removeContainer: true,
+        foreignObjectRendering: false,
         ignoreElements: (element) => {
           // 편집 모드 버튼이나 불필요한 요소 제외
           return element.classList.contains('edit-mode-button') || 
                  element.classList.contains('capture-exclude');
         }
       });
+      
+      // 패딩 복원
+      formRef.current.style.padding = originalPadding;
       
       const thumbnailUrl = canvas.toDataURL('image/png', 0.8);
       

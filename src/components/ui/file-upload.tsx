@@ -19,8 +19,8 @@ export function FileUpload({
   onUploadComplete,
   onUploadError,
   accept = ".pdf,.jpg,.jpeg,.png,.ai,.eps",
-  maxSize = 10 * 1024 * 1024, // 10MB
-  bucket = "faddit-files",
+  maxSize = 5 * 1024 * 1024, // 5MB
+  bucket = "faddit-files", // drawings에서 faddit-files로 변경
   path,
   className = "",
   disabled = false
@@ -30,10 +30,28 @@ export function FileUpload({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
-          const _file = event.target.files?.[0];
-          if (!_file) return;
+    const _file = event.target.files?.[0];
+    if (!_file) return;
 
     try {
+      // 파일 확장자 확인
+      const fileExtension = _file.name.toLowerCase().split('.').pop();
+      
+      // AI 파일인 경우 크기 제한 적용
+      if (fileExtension === 'ai') {
+        const aiMaxSize = 2 * 1024 * 1024; // 2MB
+        if (_file.size > aiMaxSize) {
+          onUploadError(`AI 파일 크기가 너무 큽니다. 최대 2MB까지 지원됩니다. (현재: ${(_file.size / (1024 * 1024)).toFixed(1)}MB)`);
+          return;
+        }
+      } else {
+        // 다른 파일들은 기존 크기 제한 적용
+        if (_file.size > maxSize) {
+          onUploadError(`파일 크기가 너무 큽니다. 최대 ${maxSize / (1024 * 1024)}MB까지 지원됩니다.`);
+          return;
+        }
+      }
+
       // 파일 검증
       StorageService.validateFile(_file, maxSize);
 
