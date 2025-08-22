@@ -20,6 +20,8 @@ type Asset = {
   fileType?: string;
   metadata?: {
     isPromotion?: boolean;
+    gender?: string;
+    season?: string;
   };
 };
 
