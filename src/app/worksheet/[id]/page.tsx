@@ -44,6 +44,8 @@ interface WorksheetData {
     image: string;
     frontImage?: string;
     backImage?: string;
+    frontElements?: any[];
+    backElements?: any[];
     annotations: string[];
     layers?: any[];
     svgContent?: string;
