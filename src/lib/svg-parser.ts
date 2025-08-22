@@ -1,8 +1,4 @@
-// svg-parser 모듈 타입 선언
-declare module 'svg-parser' {
-  export function parse(svgContent: string): any;
-}
-
+// @ts-ignore: svg-parser 모듈 타입 정의 없음
 import { parse } from 'svg-parser';
 
 export interface SVGLayer {
