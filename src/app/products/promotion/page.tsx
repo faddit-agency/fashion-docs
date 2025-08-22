@@ -33,6 +33,7 @@ export default function PromotionProductPage() {
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showImageModal, setShowImageModal] = useState(false);
   const [cartLoading, setCartLoading] = useState(false);
   const [cartSuccess, setCartSuccess] = useState(false);
   const [appliedPromoCode, setAppliedPromoCode] = useState<string>("");
@@ -365,6 +366,25 @@ export default function PromotionProductPage() {
           </div>
         </div>
       </div>
+
+      {/* 이미지 모달 */}
+      {showImageModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="relative max-w-4xl max-h-full">
+            <button
+              onClick={() => setShowImageModal(false)}
+              className="absolute top-4 right-4 p-2 bg-white/80 rounded-full hover:bg-white transition-colors z-10"
+            >
+              <span className="text-2xl">×</span>
+            </button>
+            <img
+              src={promotionProduct?.image_urls?.[selectedImage]}
+              alt={promotionProduct?.name}
+              className="max-w-full max-h-full object-contain"
+            />
+          </div>
+        </div>
+      )}
 
       {/* 결제 모달 */}
       <PaymentModal
