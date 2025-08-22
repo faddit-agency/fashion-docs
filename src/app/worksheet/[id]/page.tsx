@@ -153,6 +153,7 @@ export default function WorksheetDetailPage() {
             contactInfo: "010-1234-5678"
           },
           technicalDrawing: {
+            image: "/api/placeholder/400/300",
             frontImage: "/api/placeholder/400/300",
             backImage: "/api/placeholder/400/300",
             annotations: ["앞면: 포켓 위치", "뒷면: 플리츠 디테일"]
