@@ -38,6 +38,8 @@ interface WorksheetData {
   };
   technicalDrawing: {
     image: string;
+    frontImage?: string;
+    backImage?: string;
     annotations: string[];
     layers?: any[];
     svgContent?: string;
