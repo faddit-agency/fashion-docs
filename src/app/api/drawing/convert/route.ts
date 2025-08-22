@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { parseSVGToLayers } from '@/lib/svg-parser';
 
+/* eslint-disable @typescript-eslint/no-require-imports */
+
 export async function POST(request: NextRequest) {
   try {
     const { fileUrl, fileName, fileType, fileData } = await request.json();
