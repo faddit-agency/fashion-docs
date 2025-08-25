@@ -39,13 +39,20 @@ export default function RootLayout({
               `,
             }}
           />
-          {/* GTM 데이터 레이어 초기화 */}
+          {/* Google Analytics */}
           <Script
-            id="gtm-data-layer"
-            strategy="beforeInteractive"
+            src="https://www.googletagmanager.com/gtag/js?id=G-2Y73H69QBK"
+            strategy="afterInteractive"
+          />
+          <Script
+            id="google-analytics"
+            strategy="afterInteractive"
             dangerouslySetInnerHTML={{
               __html: `
                 window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', 'G-2Y73H69QBK');
               `,
             }}
           />
