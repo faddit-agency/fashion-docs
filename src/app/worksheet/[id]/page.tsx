@@ -163,12 +163,12 @@ export default function WorksheetDetailPage() {
           workNotes: "면 소재 사용, 깔끔한 실루엣으로 제작",
           sizeSpec: {
             sizes: ["S", "M", "L", "XL"],
-            measurements: {
-              S: { totalLength: 70, shoulderWidth: 45, armhole: 20, chestCircumference: 100 },
-              M: { totalLength: 72, shoulderWidth: 47, armhole: 21, chestCircumference: 104 },
-              L: { totalLength: 74, shoulderWidth: 49, armhole: 22, chestCircumference: 108 },
-              XL: { totalLength: 76, shoulderWidth: 51, armhole: 23, chestCircumference: 112 }
-            }
+                    measurements: {
+          S: { 총장: 70, 어깨: 45, 암홀: 20, 가슴둘레: 100 },
+          M: { 총장: 72, 어깨: 47, 암홀: 21, 가슴둘레: 104 },
+          L: { 총장: 74, 어깨: 49, 암홀: 22, 가슴둘레: 108 },
+          XL: { 총장: 76, 어깨: 51, 암홀: 23, 가슴둘레: 112 }
+        }
           },
           quantityByColorSize: {
             colors: ["화이트", "블랙", "네이비"],
@@ -249,7 +249,15 @@ export default function WorksheetDetailPage() {
         sizes: [...prev!.sizeSpec.sizes, newSize],
         measurements: {
           ...prev!.sizeSpec.measurements,
-          [newSize]: { totalLength: 0, shoulderWidth: 0, armhole: 0, chestCircumference: 0 }
+          [newSize]: { 
+            총장: 0, 
+            어깨: 0, 
+            암홀: 0, 
+            가슴둘레: 0,
+            ...Object.fromEntries(
+              Object.keys(prev!.sizeSpec.measurements[prev!.sizeSpec.sizes[0]] || {}).map(category => [category, 0])
+            )
+          }
         }
       },
       quantityByColorSize: {
@@ -263,6 +271,51 @@ export default function WorksheetDetailPage() {
         )
       }
     }));
+  };
+
+  // 카테고리 관리 함수들
+  const addCategory = () => {
+    if (!worksheetData) return;
+    const existingCategories = Object.keys(worksheetData.sizeSpec.measurements[worksheetData.sizeSpec.sizes[0]] || {});
+    const newCategory = `카테고리${existingCategories.length + 1}`;
+    
+    setWorksheetData(prev => ({
+      ...prev!,
+      sizeSpec: {
+        ...prev!.sizeSpec,
+        measurements: Object.fromEntries(
+          prev!.sizeSpec.sizes.map(size => [
+            size,
+            {
+              ...prev!.sizeSpec.measurements[size],
+              [newCategory]: 0
+            }
+          ])
+        )
+      }
+    }));
+  };
+
+  const removeCategory = (categoryToRemove: string) => {
+    if (!worksheetData) return;
+    
+    setWorksheetData(prev => {
+      const newMeasurements = Object.fromEntries(
+        prev!.sizeSpec.sizes.map(size => {
+          const sizeMeasurements = { ...prev!.sizeSpec.measurements[size] };
+          delete sizeMeasurements[categoryToRemove as keyof typeof sizeMeasurements];
+          return [size, sizeMeasurements];
+        })
+      );
+      
+      return {
+        ...prev!,
+        sizeSpec: {
+          ...prev!.sizeSpec,
+          measurements: newMeasurements
+        }
+      };
+    });
   };
 
   const removeSize = (sizeToRemove: string) => {

@@ -34,6 +34,7 @@ export function Header() {
                 alt="Faddit"
                 width={96}
                 height={21}
+                priority
                 className={`h-6 w-auto ${theme === 'light' ? 'logo-light' : 'logo-dark'}`}
               />
             </Link>

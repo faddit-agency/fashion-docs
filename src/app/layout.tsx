@@ -4,6 +4,7 @@ import Script from "next/script";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ThemeProvider } from "@/contexts/theme-context";
+import CookieConsent from "@/components/ui/cookie-consent";
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -38,12 +39,23 @@ export default function RootLayout({
               `,
             }}
           />
+          {/* GTM 데이터 레이어 초기화 */}
+          <Script
+            id="gtm-data-layer"
+            strategy="beforeInteractive"
+            dangerouslySetInnerHTML={{
+              __html: `
+                window.dataLayer = window.dataLayer || [];
+              `,
+            }}
+          />
         </head>
         <body className={`${inter.className} antialiased`}>
           <ThemeProvider>
             <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
               {children}
             </div>
+            <CookieConsent />
           </ThemeProvider>
         </body>
       </html>

@@ -60,10 +60,10 @@ export async function POST(request: NextRequest) {
         sizeSpec: {
           sizes: ["S", "M", "L", "XL"],
           measurements: {
-            S: { totalLength: 70, shoulderWidth: 45, armhole: 20, chestCircumference: 100 },
-            M: { totalLength: 72, shoulderWidth: 47, armhole: 21, chestCircumference: 104 },
-            L: { totalLength: 74, shoulderWidth: 49, armhole: 22, chestCircumference: 108 },
-            XL: { totalLength: 76, shoulderWidth: 51, armhole: 23, chestCircumference: 112 }
+            S: { 총장: 70, 어깨: 45, 암홀: 20, 가슴둘레: 100 },
+            M: { 총장: 72, 어깨: 47, 암홀: 21, 가슴둘레: 104 },
+            L: { 총장: 74, 어깨: 49, 암홀: 22, 가슴둘레: 108 },
+            XL: { 총장: 76, 어깨: 51, 암홀: 23, 가슴둘레: 112 }
           }
         },
         quantityByColorSize: {

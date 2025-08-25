@@ -832,7 +832,7 @@ function MyPageContent() {
                 업로드된 파일을 어떤 카테고리에 저장할지 선택하세요.
               </p>
               <select id="upload-category" className="w-full border rounded-md px-3 py-2 mb-4">
-                {['패턴','인쇄','원단','라벨','기타'].map(c => (
+                {['패턴','도식화','인쇄','원단','라벨','기타'].map(c => (
                   <option key={c} value={c}>{c}</option>
                 ))}
               </select>
@@ -861,6 +861,23 @@ function MyPageContent() {
                       const res = await fetch(`/api/drive/assets?userId=${userId}&category=${category}`);
                       const data = await res.json();
                       setAssets(data.assets || []);
+                      
+                      // 로컬 스토리지에도 추가
+                      const localKey = 'demo_drive_assets';
+                      const raw = typeof window !== 'undefined' ? window.localStorage.getItem(localKey) : null;
+                      const localAssets = raw ? JSON.parse(raw) : [];
+                      const newAsset = {
+                        id: `temp-${Date.now()}`,
+                        name: pendingUpload.name,
+                        path: pendingUpload.path,
+                        url: pendingUpload.url,
+                        category: selected,
+                        uploadedAt: new Date().toISOString(),
+                        fileType: pendingUpload.name.split('.').pop()?.toLowerCase() || ''
+                      };
+                      localAssets.push(newAsset);
+                      localStorage.setItem(localKey, JSON.stringify(localAssets));
+                      
                       alert('업로드 및 저장 완료');
                     } catch {
                       alert('자산 저장 중 오류가 발생했습니다');

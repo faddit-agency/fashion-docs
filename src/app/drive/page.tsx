@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import { FileDownload } from "@/components/ui/file-download";
-import { Trash2 } from "lucide-react";
+import { Trash2, Upload } from "lucide-react";
 
 import { DriveSelector } from "@/components/ui/drive-selector";
 import { AdvancedDrawingEditor } from "@/components/ui/advanced-drawing-editor";
@@ -42,42 +42,43 @@ export default function DrivePage() {
   } | null>(null);
   const [deletingAsset, setDeletingAsset] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchAssets = async () => {
+  const fetchAssets = async () => {
+    try {
+      const userId = typeof window !== 'undefined' ? (window as any).__FAKE_USER_ID__ || 'user1' : 'user1';
+      const res = await fetch(`/api/drive/assets?userId=${userId}`);
+      if (!res.ok) throw new Error('failed');
+      const data = await res.json();
+      let serverAssets: Asset[] = data.assets || [];
+      // 로컬 데모 드라이브 병합 (작업지시서 카테고리 포함 가능)
       try {
-        const userId = typeof window !== 'undefined' ? (window as any).__FAKE_USER_ID__ || 'user1' : 'user1';
-        const res = await fetch(`/api/drive/assets?userId=${userId}`);
-        if (!res.ok) throw new Error('failed');
-        const data = await res.json();
-        let serverAssets: Asset[] = data.assets || [];
-        // 로컬 데모 드라이브 병합 (작업지시서 카테고리 포함 가능)
-        try {
-          const localKey = 'demo_drive_assets';
-          const raw = typeof window !== 'undefined' ? window.localStorage.getItem(localKey) : null;
-          const localAssets: Asset[] = raw ? JSON.parse(raw) : [];
-          const byKey = new Map<string, Asset>();
-          [...serverAssets, ...localAssets].forEach(a => byKey.set(`${a.path}`, a));
-          serverAssets = Array.from(byKey.values());
-        } catch {}
-        setAssets(serverAssets);
-      } catch {
-        // 로컬 스토리지에서 프로모션 에셋 확인
         const localKey = 'demo_drive_assets';
         const raw = typeof window !== 'undefined' ? window.localStorage.getItem(localKey) : null;
         const localAssets: Asset[] = raw ? JSON.parse(raw) : [];
-        
-        const defaultAssets = [
-          { id: "1", name: "패턴 DXF", path: "products/1/patterns/sample.dxf", category: "패턴", uploadedAt: new Date().toISOString(), fileType: "dxf" },
-          { id: "2", name: "도식화 PDF", path: "products/1/specs/techpack.pdf", category: "도식화", uploadedAt: new Date().toISOString(), fileType: "pdf" },
-          { id: "3", name: "라벨 가이드", path: "assets/labels/guide.pdf", category: "라벨", uploadedAt: new Date().toISOString(), fileType: "pdf" },
-        ];
-        
-        setAssets([...defaultAssets, ...localAssets] as Asset[]);
-              } finally {
-          setLoading(false);
-        }
-      };
-      fetchAssets();
+        const byKey = new Map<string, Asset>();
+        [...serverAssets, ...localAssets].forEach(a => byKey.set(`${a.path}`, a));
+        serverAssets = Array.from(byKey.values());
+      } catch {}
+      setAssets(serverAssets);
+    } catch {
+      // 로컬 스토리지에서 프로모션 에셋 확인
+      const localKey = 'demo_drive_assets';
+      const raw = typeof window !== 'undefined' ? window.localStorage.getItem(localKey) : null;
+      const localAssets: Asset[] = raw ? JSON.parse(raw) : [];
+      
+      const defaultAssets = [
+        { id: "1", name: "패턴 DXF", path: "products/1/patterns/sample.dxf", category: "패턴", uploadedAt: new Date().toISOString(), fileType: "dxf" },
+        { id: "2", name: "도식화 PDF", path: "products/1/specs/techpack.pdf", category: "도식화", uploadedAt: new Date().toISOString(), fileType: "pdf" },
+        { id: "3", name: "라벨 가이드", path: "assets/labels/guide.pdf", category: "라벨", uploadedAt: new Date().toISOString(), fileType: "pdf" },
+      ];
+      
+      setAssets([...defaultAssets, ...localAssets] as Asset[]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAssets();
       
       // 스토리지 사용량 조회
       const fetchStorageUsage = async () => {
@@ -219,20 +220,31 @@ export default function DrivePage() {
         ) : activeTab === "files" ? (
           <div className="space-y-6">
             {/* 카테고리 필터 */}
-            <div className="flex flex-wrap gap-2">
-              {filterCategories.map((category) => (
-                <button
-                  key={category}
-                  onClick={() => setSelectedCategory(category)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    selectedCategory === category
-                      ? 'bg-green-100 text-green-700 border border-green-200'
-                      : 'bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200'
-                  }`}
-                >
-                  {category}
-                </button>
-              ))}
+            <div className="flex flex-wrap gap-2 items-center justify-between">
+              <div className="flex flex-wrap gap-2">
+                {filterCategories.map((category) => (
+                  <button
+                    key={category}
+                    onClick={() => setSelectedCategory(category)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      selectedCategory === category
+                        ? 'bg-green-100 text-green-700 border border-green-200'
+                        : 'bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200'
+                    }`}
+                  >
+                    {category}
+                  </button>
+                ))}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSelectorOpen(true)}
+                className="text-sm flex items-center gap-2"
+              >
+                <Upload className="w-4 h-4" />
+                업로드
+              </Button>
             </div>
 
             {/* 필터링된 에셋 표시 */}
@@ -242,12 +254,23 @@ export default function DrivePage() {
                   a.category === cat && 
                   (selectedCategory === "전체" || selectedCategory === cat)
                 );
-                if (items.length === 0) return null;
+                
+                // 선택된 카테고리가 "전체"가 아니고, 현재 카테고리가 선택된 카테고리가 아닌 경우 건너뛰기
+                if (selectedCategory !== "전체" && selectedCategory !== cat) {
+                  return null;
+                }
+                
                 return (
                   <div key={cat}>
                     <h2 className="text-xl font-semibold text-gray-900 mb-4">{cat}</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {items.map((asset) => (
+                    {items.length === 0 ? (
+                      <div className="text-center py-8 bg-gray-50 rounded-lg">
+                        <Folder className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                        <p className="text-gray-500">이 카테고리에 파일이 없습니다.</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {items.map((asset) => (
                         <div key={asset.id} className="bg-white rounded-lg border overflow-hidden relative">
                           {/* 프로모션 배지 */}
                           {asset.metadata?.isPromotion && (
@@ -355,6 +378,8 @@ export default function DrivePage() {
           if (selectorTarget === "front") setFrontImagePath(asset.path);
           if (selectorTarget === "back") setBackImagePath(asset.path);
           setSelectorOpen(false);
+          // 파일 업로드 후 목록 새로고침
+          fetchAssets();
         }}
         title={selectorTarget === "back" ? "뒷면 이미지 선택" : "앞면 이미지 선택"}
       />

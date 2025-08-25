@@ -925,8 +925,8 @@ export function AdvancedDrawingEditor({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-7xl max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[85vh] flex flex-col overflow-hidden">
         {/* 헤더 */}
         <div className="flex justify-between items-center p-4 border-b">
           <div className="flex items-center space-x-4">
@@ -982,9 +982,9 @@ export function AdvancedDrawingEditor({
           </div>
         </div>
 
-        <div className="flex-1 flex">
+        <div className="flex-1 flex overflow-hidden">
           {/* 레이어 패널 */}
-          <div className="w-64 border-r p-4 space-y-4">
+          <div className="w-64 border-r p-4 space-y-4 overflow-y-auto">
             <div className="flex items-center justify-between">
               <h3 className="font-medium">레이어</h3>
               <Button variant="outline" size="sm" onClick={addNewLayer}>
@@ -1138,7 +1138,7 @@ export function AdvancedDrawingEditor({
             </div>
 
             {/* AI 파일 업로드 */}
-            <div>
+            <div className="pb-4">
               <h3 className="font-medium mb-2">AI 파일 업로드</h3>
               <FileUpload
                 onUploadComplete={handleAIFileUpload}
@@ -1151,8 +1151,9 @@ export function AdvancedDrawingEditor({
                 bucket="faddit-files"
                 path="uploads"
               />
-              <p className="text-xs text-gray-500 mt-1">
-                AI, EPS, CDR, PDF 파일을 PNG로 변환
+              <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                AI, EPS, CDR, PDF 파일을<br />
+                PNG로 변환
               </p>
               {isConverting && (
                 <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded">
@@ -1181,12 +1182,12 @@ export function AdvancedDrawingEditor({
           </div>
 
           {/* 캔버스 영역 */}
-          <div className="flex-1 p-4">
-            <div className="relative border rounded-lg overflow-hidden bg-white">
+          <div className="flex-1 p-4 overflow-hidden">
+            <div className="relative border rounded-lg overflow-hidden bg-white h-full">
               {/* SVG 뷰어 */}
               <div
                 ref={svgRef}
-                className="w-full h-full min-h-[600px] relative overflow-auto cursor-grab"
+                className="w-full h-full relative overflow-auto cursor-grab"
                 style={{ 
                   backgroundImage: 'radial-gradient(circle, #f0f0f0 1px, transparent 1px)', 
                   backgroundSize: '20px 20px',
@@ -1276,7 +1277,7 @@ export function AdvancedDrawingEditor({
         </div>
 
         {/* 푸터 */}
-        <div className="p-4 border-t flex justify-between">
+        <div className="p-4 border-t flex justify-between flex-shrink-0">
           <div className="text-sm text-gray-600">
             {layers.reduce((total, layer) => total + layer.elements.length, 0)}개 요소
           </div>
