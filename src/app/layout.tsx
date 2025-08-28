@@ -26,6 +26,20 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="ko" className={inter.variable}>
         <head>
+          {/* Google Tag Manager */}
+          <Script
+            id="google-tag-manager"
+            strategy="afterInteractive"
+            dangerouslySetInnerHTML={{
+              __html: `
+                (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+                new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+                j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+                'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+                })(window,document,'script','dataLayer','GTM-P3463JQV');
+              `,
+            }}
+          />
           <Script
             id="microsoft-clarity"
             strategy="afterInteractive"
@@ -42,6 +56,15 @@ export default function RootLayout({
 
         </head>
         <body className={`${inter.className} antialiased`}>
+          {/* Google Tag Manager (noscript) */}
+          <noscript>
+            <iframe 
+              src="https://www.googletagmanager.com/ns.html?id=GTM-P3463JQV"
+              height="0" 
+              width="0" 
+              style={{display:'none',visibility:'hidden'}}
+            />
+          </noscript>
           <ThemeProvider>
             <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
               {children}
