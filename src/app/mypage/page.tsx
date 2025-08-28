@@ -15,7 +15,6 @@ import { Download, Edit, FileText, Trash2, Plus, Minus, ShoppingCart, X, Save, U
 import { FileUpload } from "@/components/ui/file-upload";
 import { FileDownload } from "@/components/ui/file-download";
 import { getWorksheetThumbnail, deleteWorksheetThumbnail } from "@/components/ui/worksheet-thumbnail";
-import PhoneRequiredModal from "@/components/ui/phone-required-modal";
 
 
 // 타입 정의
@@ -330,7 +329,6 @@ function MyPageContent() {
   const [selectedCartItems, setSelectedCartItems] = useState<number[]>([]);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const [showPhoneRequiredModal, setShowPhoneRequiredModal] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const { updateCartCount } = useCart(user?.id);
 
@@ -622,19 +620,6 @@ function MyPageContent() {
     setShowPaymentModal(false);
     alert("결제가 완료되었습니다! 파일 다운로드가 가능합니다.");
     setActiveTab('purchases');
-  };
-
-  const handleProductionRequest = (worksheetId: number) => {
-    // 휴대폰 번호 확인
-    const hasPhoneNumber = user?.phoneNumbers && user.phoneNumbers.length > 0;
-    
-    if (!hasPhoneNumber) {
-      setShowPhoneRequiredModal(true);
-      return;
-    }
-    
-    // 휴대폰 번호가 있으면 생산 의뢰 진행
-    alert(`작업지시서 #${worksheetId}의 생산 의뢰가 접수되었습니다.\n봉제공장에서 연락드리겠습니다.`);
   };
 
   // 드라이브 데이터 뷰 (간단히 내장 컴포넌트)
@@ -964,13 +949,6 @@ function MyPageContent() {
                   {user.firstName ? `${user.firstName} ${user.lastName || ''}` : '사용자'}
                 </h1>
                 <p className="text-muted-foreground mb-2">{user.emailAddresses[0]?.emailAddress}</p>
-                
-                {/* 휴대폰 번호 표시 */}
-                {user.phoneNumbers && user.phoneNumbers.length > 0 && (
-                  <p className="text-muted-foreground mb-2">
-                    📱 {user.phoneNumbers[0].phoneNumber}
-                  </p>
-                )}
                 
                 {/* 추가 프로필 정보 */}
                 {userProfile && (
@@ -1536,7 +1514,6 @@ function MyPageContent() {
                                   variant="outline" 
                                   size="sm" 
                                   className="bg-green-600 text-white hover:bg-green-700 flex-1"
-                                  onClick={() => handleProductionRequest(worksheet.id)}
                                 >
                                   생산 의뢰
                                 </Button>
@@ -1777,16 +1754,6 @@ function MyPageContent() {
            onProfileUpdate={loadUserProfile}
          />
        )}
-
-       {/* 휴대폰 번호 필요 모달 */}
-       <PhoneRequiredModal
-         isOpen={showPhoneRequiredModal}
-         onClose={() => setShowPhoneRequiredModal(false)}
-         onComplete={() => {
-           setShowPhoneRequiredModal(false);
-           // 생산 의뢰 재시도 로직을 여기에 추가할 수 있습니다
-         }}
-       />
 
       {/* 드라이브 선택 모달은 제거됨 */}
     </div>

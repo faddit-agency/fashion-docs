@@ -2,6 +2,21 @@
 
 import { useEffect, useState } from 'react';
 
+// GTM 이벤트 전송 함수
+const pushGTMEvent = (eventName: string, additionalData: Record<string, any> = {}) => {
+  if (typeof window !== 'undefined') {
+    window.dataLayer = window.dataLayer || [];
+    const eventData = {
+      event: eventName,
+      ...additionalData
+    };
+    window.dataLayer.push(eventData);
+    console.log(`GTM Event pushed: ${eventName}`, eventData);
+    return true;
+  }
+  return false;
+};
+
 export default function CookieConsent() {
   const [showBanner, setShowBanner] = useState(false);
 
@@ -14,12 +29,11 @@ export default function CookieConsent() {
   }, []);
 
   const handleAccept = () => {
-    // GTM 데이터 레이어에 이벤트 전송
-    if (typeof window !== 'undefined') {
-      window.dataLayer = window.dataLayer || [];
-      window.dataLayer.push({
-        'event': 'consent_accepted'
-      });
+    // GTM 데이터 레이어에 consent_accepted 이벤트 전송
+    const eventSent = pushGTMEvent('consent_accepted');
+    
+    if (!eventSent) {
+      console.error('Failed to send consent_accepted event to GTM');
     }
     
     // 동의 상태를 브라우저에 저장
