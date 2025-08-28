@@ -30,10 +30,12 @@ export default function CookieConsent() {
 
   const handleAccept = () => {
     // GTM 데이터 레이어에 consent_accepted 이벤트 전송
-    const eventSent = pushGTMEvent('consent_accepted');
-    
-    if (!eventSent) {
-      console.error('Failed to send consent_accepted event to GTM');
+    if (typeof window !== 'undefined') {
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({
+        event: 'consent_accepted'
+      });
+      console.log('consent_accepted event pushed to dataLayer');
     }
     
     // 동의 상태를 브라우저에 저장
