@@ -15,7 +15,8 @@ export default function CookieConsent() {
 
   const handleAccept = () => {
     // GTM 데이터 레이어에 이벤트 전송
-    if (typeof window !== 'undefined' && window.dataLayer) {
+    if (typeof window !== 'undefined') {
+      window.dataLayer = window.dataLayer || [];
       window.dataLayer.push({
         'event': 'consent_accepted'
       });
