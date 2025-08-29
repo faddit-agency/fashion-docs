@@ -20,7 +20,7 @@ export default function SignUpPage() {
 
   // 사용자가 로그인되면 sign_up 이벤트 전송
   useEffect(() => {
-    if (user) {
+    if (user && user.createdAt) {
       // 새로 가입한 사용자인지 확인 (createdAt이 최근인 경우)
       const userCreatedAt = new Date(user.createdAt);
       const now = new Date();

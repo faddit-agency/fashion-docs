@@ -27,7 +27,7 @@ export default function Home() {
 
   // 첫 로그인 팝업 표시 여부 확인 및 회원가입 이벤트 전송
   useEffect(() => {
-    if (isLoaded && user) {
+    if (isLoaded && user && user.createdAt) {
       // 새로 가입한 사용자인지 확인 (createdAt이 최근인 경우)
       const userCreatedAt = new Date(user.createdAt);
       const now = new Date();
