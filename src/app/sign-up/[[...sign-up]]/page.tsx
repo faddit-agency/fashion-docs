@@ -1,6 +1,39 @@
+'use client';
+
 import { SignUp } from "@clerk/nextjs";
+import { useEffect } from "react";
+import { useClerk } from "@clerk/nextjs";
 
 export default function SignUpPage() {
+  const { user } = useClerk();
+
+  // GTM 이벤트 전송 함수
+  const pushGTMEvent = (eventName: string) => {
+    if (typeof window !== 'undefined') {
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({
+        event: eventName
+      });
+      console.log(`${eventName} event pushed to dataLayer`);
+    }
+  };
+
+  // 사용자가 로그인되면 sign_up 이벤트 전송
+  useEffect(() => {
+    if (user) {
+      // 새로 가입한 사용자인지 확인 (createdAt이 최근인 경우)
+      const userCreatedAt = new Date(user.createdAt);
+      const now = new Date();
+      const timeDiff = now.getTime() - userCreatedAt.getTime();
+      const minutesDiff = timeDiff / (1000 * 60);
+      
+      // 5분 이내에 생성된 사용자라면 회원가입으로 간주
+      if (minutesDiff <= 5) {
+        pushGTMEvent('sign_up');
+      }
+    }
+  }, [user]);
+
   return (
     <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
       <div className="max-w-md w-full">

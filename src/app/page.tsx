@@ -14,9 +14,31 @@ export default function Home() {
   const { user, isLoaded } = useUser();
   const [showWelcomePopup, setShowWelcomePopup] = useState(false);
 
-  // 첫 로그인 팝업 표시 여부 확인
+  // GTM 이벤트 전송 함수
+  const pushGTMEvent = (eventName: string) => {
+    if (typeof window !== 'undefined') {
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({
+        event: eventName
+      });
+      console.log(`${eventName} event pushed to dataLayer`);
+    }
+  };
+
+  // 첫 로그인 팝업 표시 여부 확인 및 회원가입 이벤트 전송
   useEffect(() => {
     if (isLoaded && user) {
+      // 새로 가입한 사용자인지 확인 (createdAt이 최근인 경우)
+      const userCreatedAt = new Date(user.createdAt);
+      const now = new Date();
+      const timeDiff = now.getTime() - userCreatedAt.getTime();
+      const minutesDiff = timeDiff / (1000 * 60);
+      
+      // 5분 이내에 생성된 사용자라면 회원가입으로 간주하고 이벤트 전송
+      if (minutesDiff <= 5) {
+        pushGTMEvent('sign_up');
+      }
+
       const welcomeCompleted = localStorage.getItem('faddit_welcome_completed');
       if (!welcomeCompleted) {
         setShowWelcomePopup(true);
